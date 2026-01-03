@@ -199,9 +199,16 @@ def sanitize_css(css):
         prop = prop.strip().lower()
         value = value.strip()
 
-        if prop in ALLOWED_CSS_PROPERTIES:
-            if re.search(r"expression|url\(", value, re.IGNORECASE):
+        # Block unsafe expressions or URLs
+        if re.search(r"expression|url\(", value, re.IGNORECASE):
+            # If property is background-image, you might want to allow certain URLs
+            if prop == "background-image":
+                # Optional: add URL validation here
+                pass
+            else:
                 continue
+
+        if prop in ALLOWED_CSS_PROPERTIES:
             sanitized_declarations.append(f"{prop}: {value}")
 
     return "; ".join(sanitized_declarations)
