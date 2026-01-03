@@ -539,6 +539,7 @@ def view_paste(paste_id):
             safe_content=safe_content,
             published_at=paste.published_at,
             last_edited_at=paste.last_edited_at,
+            logged_in=("user_id" in session),
         )
     )
 

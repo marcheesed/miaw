@@ -1,30 +1,82 @@
 {% extends "layout.html" %} {% block content %}
-<div class="full-container-1">
-    <div class="container-1">
-        <div class="paste-content">{{ safe_content|safe }}</div>
-    </div>
+<div id="content">
+    <div class="full-container-1">
+        <div class="container-1">
+            <div class="paste-content">{{ safe_content|safe }}</div>
+        </div>
 
-    <div style="display: flex; justify-content: space-between">
-        <a href="{{ url_for('edit_paste', paste_id=paste.id) }}"
-            ><button class="btn">edit this paste</button></a
-        >
+        <div style="display: flex; justify-content: space-between">
+            <a href="#" onclick="editPaste(event, '{{ paste.id }}')"
+                ><button class="btn">Edit this paste</button></a
+            >
 
-        <div class="paste-stats">
-            <p>
-                published on: {{ published_at.strftime("%Y-%m-%d %H:%M") }} UTC
-            </p>
-            {% if last_edited_at %}
-            <p>
-                last edited: {{ last_edited_at.strftime("%Y-%m-%d %H:%M") }} UTC
-            </p>
-            {% else %}
-            <p>
-                last edited: {{ published_at.strftime("%Y-%m-%d %H:%M") }} UTC
-            </p>
-            {% endif %}
-            <p>owner: {{ paste.user.username }}</p>
-            <p>views: {{ paste.views }}</p>
+            <div class="paste-stats">
+                <p>
+                    {% if published_at %} published on: {{
+                    published_at.strftime("%Y-%m-%d %H:%M") }} UTC {% else %}
+                    none {% endif %}
+                </p>
+                {% if last_edited_at %}
+                <p>
+                    last edited: {{ last_edited_at.strftime("%Y-%m-%d %H:%M") }}
+                    UTC
+                </p>
+                {% else %}
+                <p>
+                    last edited: {{ published_at.strftime("%Y-%m-%d %H:%M") }}
+                    UTC
+                </p>
+                {% endif %}
+                <p>owner: {{ paste.user.username }}</p>
+                <p>views: {{ paste.views }}</p>
+            </div>
         </div>
     </div>
 </div>
+
+<div
+    id="popup"
+    style="
+        display: none;
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: #fff;
+        padding: 20px;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    "
+>
+    <span id="popup-message"></span>
+    <br /><br />
+    <button class="btn" onclick="hidePopup()">close</button>
+</div>
+
+<script>
+
+    function showPopup(message) {
+        document.getElementById("popup-message").innerText = message;
+        document.getElementById("popup").style.display = "block";
+        document.getElementById("content").classList.add("blur");
+    }
+
+    function hidePopup() {
+        document.getElementById("popup").style.display = "none";
+        document.getElementById("content").classList.remove("blur");
+    }
+
+    function editPaste(event, pasteId) {
+        event.preventDefault();
+
+        const loggedIn = {{ 'true' if logged_in else 'false' }};
+
+        if (loggedIn) {
+            window.location.href = `/${pasteId}/edit`;
+        } else {
+            showPopup("ah ah ah you gotta log in");
+        }
+    }
+</script>
 {% endblock %}
