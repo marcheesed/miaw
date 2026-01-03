@@ -21,6 +21,7 @@ from flask import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
+from flask_wtf.csrf import generate_csrf
 from PIL import Image
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -707,18 +708,45 @@ def delete_paste(paste_id):
     return redirect(url_for("pastes"))
 
 
+@app.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    user = User.query.get(session["user_id"])
+    if request.method == "POST":
+        current_password = request.form.get("current_password", "").strip()
+        new_password = request.form.get("new_password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
+
+        if not user.check_password(current_password):
+            return jsonify(
+                {"success": False, "error": "Current password is incorrect."}
+            )
+
+        if new_password != confirm_password:
+            return jsonify({"success": False, "error": "New passwords do not match."})
+
+        user.set_password(new_password)
+        db.session.commit()
+        return jsonify(
+            {
+                "success": True,
+                "redirect_url": url_for("profile", username=user.username),
+            }
+        )
+
+    # For GET requests, render the form
+    return render_template("change_password.html")
+
+
 @app.route("/edit_profile", methods=["GET", "POST"])
 @login_required
 def edit_profile():
     user = User.query.get(session["user_id"])
     if request.method == "POST":
         custom_css_input = request.form.get("custom_css", "")
-
         custom_css_input = custom_css_input.strip()
-
         declarations = extract_css_declarations(custom_css_input)
         sanitized_declarations = sanitize_css(declarations)
-
         match = re.search(r"\{[^}]*\}", custom_css_input)
         if match:
             full_css = (
@@ -730,7 +758,6 @@ def edit_profile():
             )
         else:
             full_css = custom_css_input
-
         user.custom_css = full_css
 
         bio_html = request.form.get("bio", "")
@@ -751,6 +778,17 @@ def edit_profile():
             except Exception as e:
                 print(f"Error converting image: {e}")
                 user.profile_picture = filename
+
+        new_username = request.form.get("username", "").strip()
+        if new_username and new_username != user.username:
+            existing_user = User.query.filter_by(username=new_username).first()
+            if not existing_user:
+                user.username = new_username
+            else:
+                return (
+                    "Username already exists. Please choose a different one.",
+                    "error",
+                )
 
         db.session.commit()
         return redirect(url_for("profile", username=user.username))

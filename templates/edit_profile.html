@@ -22,24 +22,12 @@
                 <div id="profile-flex-two">
                 <form method="POST" enctype="multipart/form-data">
                     <div style="display: flex; align-items: center; gap: 15px">
-                        <h2 id="name">
-                            {% if current_user.username == user.username %} your
-                            {% else %} {{ user.username }}'s {% endif %} profile
-                        </h2>
-                        <div class="badges-container">
-                            {% for badge in user.badges %}
-                            <div class="badge-containment">
-                                {% if badge.icon_url %}
-                                <img
-                                    src="{{ badge.icon_url }}"
-                                    alt="{{ badge.name }}"
-                                    width="24"
-                                    height="24"
-                                />
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
+                        <div>
+
+                            <input style="margin-bottom:10px" type="text" id="username" name="username" placeholder="username" value="{{ user.username }}">
+                          </div>
+
+
                     </div>
                     <textarea name="bio" id="bio" rows="10" cols="20">
                         {{ user.bio }}</textarea
@@ -68,6 +56,10 @@
                 {{ user.custom_css }}</textarea
             ><br /><br />
 
+
+
+
+
             <input
                 type="hidden"
                 name="csrf_token"
@@ -75,10 +67,16 @@
             />
 
         </form>
+        <div style="display:flex; justify-content:space-between">
         <a href="{{ url_for('profile', username=user.username) }}"
-            >back to profile</a
+            ><button class="btn">back to profile</button></a
+        >
+
+        <a href="{{ url_for('change_password', username=user.username) }}"
+            ><button class="btn">change password</button></a
         >
             {% endblock %}
+        </div>
         </div>
     </body>
 </html>
