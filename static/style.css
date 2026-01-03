@@ -259,6 +259,7 @@ input {
     max-height: 300px;
     border-radius: 8px;
     object-fit: cover;
+    border: 1px solid var(--color-border);
 }
 
 #profile-flex {

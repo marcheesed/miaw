@@ -3,7 +3,7 @@ const sunIcon = document.getElementById("icon-sun");
 const moonIcon = document.getElementById("icon-moon");
 
 document.addEventListener("DOMContentLoaded", () => {
-  const savedTheme = localStorage.getItem("theme");
+  const savedTheme = sessionStorage.getItem("theme");
   const root = document.documentElement;
 
   if (savedTheme === "dark") {
@@ -23,12 +23,12 @@ toggleButton.addEventListener("click", () => {
 
   if (currentTheme === "dark") {
     root.removeAttribute("data-theme");
-    localStorage.setItem("theme", "light");
+    sessionStorage.setItem("theme", "light");
     sunIcon.style.display = "block";
     moonIcon.style.display = "none";
   } else {
     root.setAttribute("data-theme", "dark");
-    localStorage.setItem("theme", "dark");
+    sessionStorage.setItem("theme", "dark");
     moonIcon.style.display = "block";
     sunIcon.style.display = "none";
   }
