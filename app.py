@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -80,6 +81,12 @@ allowed_attributes = {
     "hr": ["style", "class", "id"],
     "button": ["type", "style", "class", "id"],
 }
+
+
+with open("banned_urls.json", "r") as f:
+    BANNED_URLS = set(json.load(f))
+
+
 app = Flask(__name__)
 app.secret_key = "your-secret-key"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///pastes.db"
@@ -354,30 +361,48 @@ def index():
             return jsonify({"success": False, "error": "please log in to submit!"}), 200
 
         raw_content = request.form.get("content")
-
         if raw_content is None:
             return jsonify({"success": False, "error": "no content provided!"}), 200
 
         content = sanitize_content(raw_content)
-
         if not content:
             return jsonify(
                 {"success": False, "error": "content is empty after sanitization."}
             ), 200
 
         custom_id = request.form.get("custom_id", "").strip()
+
+        # Check if custom_id is provided
         if custom_id:
+            # Optional: Validate format (alphanumeric, underscores, hyphens)
+            import re
+
+            if not re.match(r"^[a-zA-Z0-9_-]+$", custom_id):
+                return jsonify(
+                    {"success": False, "error": "invalid url format/characters"}
+                ), 200
+
+            # Check if custom_id is in banned list
+            if custom_id in BANNED_URLS:
+                return jsonify({"success": False, "error": "this url is banned."}), 200
+
+            # Check if custom_id is already taken
             if Paste.query.get(custom_id):
                 return jsonify(
                     {"success": False, "error": "that url is already taken!"}
                 ), 200
+
             paste_id = custom_id
         else:
+            # Generate a unique ID
+            import uuid
+
             while True:
                 paste_id = uuid.uuid4().hex[:8]
                 if not Paste.query.get(paste_id):
                     break
 
+        # Save the new paste
         new_paste = Paste(
             id=paste_id,
             content=content,
