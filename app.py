@@ -66,14 +66,17 @@ allowed_tags = [
     "style",
     "img",
     "hr",
+    "button",
 ]
+
 allowed_attributes = {
-    "a": ["href", "title", "target", "style"],
-    "img": ["src", "alt", "title", "style"],
+    "a": ["href", "title", "target", "style", "class", "id"],
+    "img": ["src", "alt", "title", "style", "class", "id"],
     "div": ["style", "class", "id"],
-    "span": ["style"],
+    "span": ["style", "class", "id"],
     "style": [],
-    "hr": ["style"],
+    "hr": ["style", "class", "id"],
+    "button": ["type", "style", "class", "id"],
 }
 app = Flask(__name__)
 app.secret_key = "your-secret-key"
