@@ -67,8 +67,8 @@ allowed_tags = [
     "img",
 ]
 allowed_attributes = {
-    "a": ["href", "title", "target"],
-    "img": ["src", "alt", "title"],
+    "a": ["href", "title", "target", "style"],
+    "img": ["src", "alt", "title", "style"],
     "div": ["style", "class", "id"],
     "span": ["style"],
     "style": [],
