@@ -12,11 +12,17 @@
         {% endif %}
 
         <div class="paste-stats">
-            <p>published on: {{ published_at.strftime("%Y-%m-%d %H:%M") }}</p>
+            <p>
+                published on: {{ published_at.strftime("%Y-%m-%d %H:%M") }} UTC
+            </p>
             {% if last_edited_at %}
-            <p>last edited: {{ last_edited_at.strftime("%Y-%m-%d %H:%M") }}</p>
+            <p>
+                last edited: {{ last_edited_at.strftime("%Y-%m-%d %H:%M") }} UTC
+            </p>
             {% else %}
-            <p>last edited: {{ published_at.strftime("%Y-%m-%d %H:%M") }}</p>
+            <p>
+                last edited: {{ published_at.strftime("%Y-%m-%d %H:%M") }} UTC
+            </p>
             {% endif %}
             <p>owner: {{ paste.user.username }}</p>
             <p>views: {{ paste.views }}</p>

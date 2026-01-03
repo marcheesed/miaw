@@ -796,7 +796,6 @@ def edit_profile():
 
 
 @app.route("/profile/<username>", methods=["GET", "POST"])
-@login_required
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
 

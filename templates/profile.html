@@ -52,6 +52,7 @@
                     </div>
                 </div>
             </div>
+            <br />
             {% if current_user.username == user.username %}
             <div style="display: flex; justify-content: flex-end">
                 <a href="{{ url_for('edit_profile', username=user.username) }}">
