@@ -151,6 +151,11 @@
                                     );
                                 "
                             >
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                />
                                 <button class="btn" type="submit">
                                     delete
                                 </button>
