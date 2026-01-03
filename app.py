@@ -65,6 +65,7 @@ allowed_tags = [
     "h6",
     "style",
     "img",
+    "hr",
 ]
 allowed_attributes = {
     "a": ["href", "title", "target", "style"],
@@ -72,6 +73,7 @@ allowed_attributes = {
     "div": ["style", "class", "id"],
     "span": ["style"],
     "style": [],
+    "hr": ["style"],
 }
 app = Flask(__name__)
 app.secret_key = "your-secret-key"
