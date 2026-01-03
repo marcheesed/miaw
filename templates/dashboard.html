@@ -1,0 +1,53 @@
+{% extends "layout.html" %} {% block content %}
+<!doctype html>
+<html>
+    <head>
+        <title>Your Dashboard</title>
+    </head>
+    <body>
+        <div class="container-2">
+            <form
+                style="text-align: center"
+                method="get"
+                action="{{ url_for('dashboard') }}"
+            >
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search..."
+                    value="{{ search }}"
+                />
+                <button class="btn" type="submit">Search</button>
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                />
+            </form>
+
+            {% if pastes %} {% for paste in pastes %}
+            <div class="paste-card">
+                <a href="{{ url_for('view_paste', paste_id=paste.id) }}"
+                    >{{ url_for('view_paste', paste_id=paste.id) }}</a
+                >
+                <!-- Optional: show snippet of content -->
+            </div>
+            {% endfor %} {% else %}
+            <div>No pastes yet.</div>
+            {% endif %}
+        </div>
+        <!-- Pagination Controls -->
+        <div>
+            {% if page > 1 %}
+            <a href="{{ url_for('dashboard', page=page-1, search=search) }}"
+                >Previous</a
+            >
+            {% endif %} {% if (page * per_page) < total %}
+            <a href="{{ url_for('dashboard', page=page+1, search=search) }}"
+                >Next</a
+            >
+            {% endif %}
+        </div>
+        {% endblock %}
+    </body>
+</html>

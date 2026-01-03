@@ -1,0 +1,95 @@
+<div id="content">
+    {% extends "layout.html" %} {% block content %}
+    <div class="container-1">
+        <form id="pasteForm" method="post">
+            <textarea
+                name="content"
+                placeholder="enter your text here..."
+                required
+                rows="30"
+                cols="80"
+            ></textarea
+            ><br />
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="new-paste-options">
+                <input
+                    type="text"
+                    name="custom_id"
+                    placeholder="custom url here!"
+                />
+                {% if 'user_id' in session %}
+                <button class="btn" type="submit">create</button>
+            </div>
+        </form>
+        {% else %}
+        <p>
+            you need to <a href="{{ url_for('login') }}">log in</a> to create a
+            paste!
+        </p>
+        {% endif %}
+    </div>
+</div>
+<div
+    id="popup"
+    style="
+        display: none;
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+    "
+>
+    <span id="popup-message"></span>
+    <br />
+    <br />
+    <button class="btn" onclick="hidePopup()">close</button>
+</div>
+
+<script>
+    // Function to show popup with message
+    function showPopup(message) {
+        document.getElementById("popup-message").innerText = message;
+        document.getElementById("popup").style.display = "block";
+
+        // Add blur to main content
+        document.getElementById("content").classList.add("blur");
+    }
+
+    // Function to hide popup
+    function hidePopup() {
+        document.getElementById("popup").style.display = "none";
+
+        // Remove blur from main content
+        document.getElementById("content").classList.remove("blur");
+    }
+
+    // Handle form submission via AJAX
+    document
+        .getElementById("pasteForm")
+        .addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            fetch("/", {
+                method: "POST",
+                body: new FormData(this),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        // Redirect on success
+                        window.location.href = data.redirect_url;
+                    } else {
+                        // Show error message in popup
+                        showPopup(data.error);
+                    }
+                })
+                .catch((error) => {
+                    showPopup("an unexpected error occurred!");
+                    console.error("error:", error);
+                });
+        });
+</script>
+
+{% endblock %}

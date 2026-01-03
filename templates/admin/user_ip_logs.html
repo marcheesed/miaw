@@ -1,0 +1,25 @@
+{% extends "layout.html" %} {% block content %}
+<!doctype html>
+<html>
+    <head> </head>
+    <body>
+        <div class="container-1">
+            <p style="text-align: center">ip logs for {{ username }}</p>
+            <table border="1">
+                <tr>
+                    <th>ip address</th>
+                    <th>action</th>
+                    <th>timestamp</th>
+                </tr>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.ip_address }}</td>
+                    <td>{{ log.action }}</td>
+                    <td>{{ log.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endblock %}
+    </body>
+</html>

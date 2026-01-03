@@ -1,0 +1,64 @@
+{% extends "layout.html" %} {% block content %}
+<!doctype html>
+<html>
+    <head>
+        {% if user.custom_css %}
+        <style>
+            {{ user.custom_css|safe }}
+        </style>
+        {% endif %}
+    </head>
+    <body>
+        <div class="container-2">
+            <div id="profile-flex">
+                {% if user.profile_picture %}
+                <img
+                    src="{{ url_for('static', filename='profile_pics/' + user.profile_picture) }}"
+                    alt="Profile Picture"
+                    id="pfp"
+                />
+                {% else %}
+                <img
+                    src="{{ url_for('static', filename='profile_pics/default_pfp.png') }}"
+                    alt="Profile Picture"
+                    id="pfp"
+                />
+                {% endif %}
+
+                <div id="profile-flex-two">
+                    <div style="display: flex; align-items: center; gap: 15px">
+                        <h2 id="name">
+                            {% if current_user.username == user.username %} your
+                            {% else %} {{ user.username }}'s {% endif %} profile
+                        </h2>
+                        <div class="badges-container">
+                            {% for badge in user.badges %}
+                            <div class="badge-containment">
+                                {% if badge.icon_url %}
+                                <img
+                                    src="{{ badge.icon_url }}"
+                                    alt="{{ badge.name }}"
+                                    width="24"
+                                    height="24"
+                                />
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="bio">
+                        {% if user.bio %}{{ sanitize_content(user.bio) | safe }}
+                        {% else %} no bio set! {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% if current_user.username == user.username %}
+            <div style="display: flex; justify-content: flex-end">
+                <a href="{{ url_for('edit_profile', username=user.username) }}">
+                    <button class="btn">edit profile</button></a
+                >
+            </div>
+            {% endif %} {% endblock %}
+        </div>
+    </body>
+</html>

@@ -1,0 +1,70 @@
+{% extends "layout.html" %} {% block content %}
+<!doctype html>
+<html>
+    <head> </head>
+    <body>
+        <div class="container-1">
+            <form
+                method="GET"
+                action="{{ url_for('ip_logs') }}"
+                style="text-align: center; margin-bottom: 20px"
+            >
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="search by username or IP..."
+                    value="{{ request.args.get('search', '') }}"
+                    style="padding: 8px; width: 200px"
+                />
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                />
+                <button type="submit" style="padding: 8px 12px">search</button>
+            </form>
+
+            <table border="1" style="width: 80%; margin: 0 auto">
+                <tr>
+                    <th>username</th>
+                    <th>ip address</th>
+                    <th>action</th>
+                    <th>timestamp</th>
+                </tr>
+                {% for log in logs %}
+                <tr>
+                    <td>
+                        <a
+                            href="{{ url_for('user_ip_logs', username=log.username) }}"
+                            >{{ log.username }}</a
+                        >
+                    </td>
+                    <td>{{ log.ip_address }}</td>
+                    <td>{{ log.action }}</td>
+                    <td>{{ log.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="pagination" style="text-align: center; margin: 20px">
+            {% if page > 1 %}
+            <a href="{{ url_for('ip_logs', page=page-1, search=search) }}"
+                >previous</a
+            >
+            {% else %}
+            <a class="disabled">previous</a>
+            {% endif %}
+
+            <span>page {{ page }} of {{ total_pages }}</span>
+
+            {% if page < total_pages %}
+            <a href="{{ url_for('ip_logs', page=page+1, search=search) }}"
+                >next</a
+            >
+            {% else %}
+            <a class="disabled">next</a>
+            {% endif %}
+        </div>
+        {% endblock %}
+    </body>
+</html>

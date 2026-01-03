@@ -1,0 +1,26 @@
+{% extends "layout.html" %} {% block content %}
+<div class="full-container-1">
+    <div class="container-1">
+        <div class="paste-content">{{ safe_content|safe }}</div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between">
+        {% if paste.user_id == current_user.id or current_user.is_admin %}
+        <a href="{{ url_for('edit_paste', paste_id=paste.id) }}"
+            ><button class="btn">edit this paste</button></a
+        >
+        {% endif %}
+
+        <div class="paste-stats">
+            <p>published on: {{ published_at.strftime("%Y-%m-%d %H:%M") }}</p>
+            {% if last_edited_at %}
+            <p>last edited: {{ last_edited_at.strftime("%Y-%m-%d %H:%M") }}</p>
+            {% else %}
+            <p>last edited: {{ published_at.strftime("%Y-%m-%d %H:%M") }}</p>
+            {% endif %}
+            <p>owner: {{ paste.user.username }}</p>
+            <p>views: {{ paste.views }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

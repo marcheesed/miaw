@@ -1,0 +1,84 @@
+<!doctype html>
+{% extends "layout.html" %} {% block content %}
+<html>
+    <head>
+    </head>
+    <body>
+        <div class="container-2">
+            <div id="profile-flex">
+                {% if user.profile_picture %}
+                <img
+                    src="{{ url_for('static', filename='profile_pics/' + user.profile_picture) }}"
+                    alt="Profile Picture"
+                    id="pfp"
+                />
+                {% else %}
+                <img
+                    src="{{ url_for('static', filename='profile_pics/default_pfp.png') }}"
+                    alt="Profile Picture"
+                    id="pfp"
+                />
+                {% endif %}
+                <div id="profile-flex-two">
+                <form method="POST" enctype="multipart/form-data">
+                    <div style="display: flex; align-items: center; gap: 15px">
+                        <h2 id="name">
+                            {% if current_user.username == user.username %} your
+                            {% else %} {{ user.username }}'s {% endif %} profile
+                        </h2>
+                        <div class="badges-container">
+                            {% for badge in user.badges %}
+                            <div class="badge-containment">
+                                {% if badge.icon_url %}
+                                <img
+                                    src="{{ badge.icon_url }}"
+                                    alt="{{ badge.name }}"
+                                    width="24"
+                                    height="24"
+                                />
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <textarea name="bio" id="bio" rows="10" cols="20">
+                        {{ user.bio }}</textarea
+                    >
+                </div>
+            </div>
+            <br>
+            <div style="display: flex; justify-content: space-between;">
+            <input
+                type="file"
+                name="profile_picture"
+                id="profile_picture"
+            />
+            <button class="btn" type="submit">save changes</button>
+            </div>
+
+
+            <label for="custom_css">custom css</label><br />
+            <textarea
+                name="custom_css"
+                id="custom_css"
+                rows="5"
+                cols="30"
+                placeholder="enter your custom CSS here..."
+            >
+                {{ user.custom_css }}</textarea
+            ><br /><br />
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            />
+
+        </form>
+        <a href="{{ url_for('profile', username=user.username) }}"
+            >back to profile</a
+        >
+            {% endblock %}
+        </div>
+    </body>
+</html>

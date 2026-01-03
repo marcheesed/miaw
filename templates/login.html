@@ -1,0 +1,23 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container-2">
+    {% if error %}
+    <p style="color: red">{{ error }}</p>
+    {% endif %}
+    <form method="post">
+        <div id="login-register">
+            <div>
+                <input type="text" name="username" />
+            </div>
+            <div>
+                <input type="password" name="password" />
+            </div>
+        </div>
+        <div>
+            <button style="margin-top: 10px" class="btn" type="submit">
+                login
+            </button>
+        </div>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    </form>
+</div>
+{% endblock %}

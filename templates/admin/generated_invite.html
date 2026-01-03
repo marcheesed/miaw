@@ -1,0 +1,16 @@
+{% extends "layout.html" %} {% block content %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+
+    </head>
+    <body>
+        <div class="container-1"
+        <p>CONGRATULATION INVITE CODE ACHIEVED:</p>
+            <pre>{{ code }}</pre>
+            <a href="{{ url_for('generate_invite') }}">get another (greedy fuck)</a>
+        </div>
+    </body>
+</html>
+{% endblock %}

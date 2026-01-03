@@ -1,0 +1,96 @@
+{% extends "layout.html" %} {% block content %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+    </head>
+    <body>
+        <h1 style="text-align: center">all pastes</h1>
+        <!-- Search form -->
+        <div class="container-1">
+            <form
+                method="GET"
+                action="{{ url_for('pastes') }}"
+                style="text-align: center; margin-bottom: 20px"
+            >
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="search content..."
+                    value="{{ search }}"
+                />
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                />
+                <button type="submit">search</button>
+            </form>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>content preview</th>
+                        <th>owner</th>
+                        <th>actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paste in pastes %}
+                    <tr>
+                        <td>{{ paste.id }}</td>
+                        <td>
+                            {{ paste.content[:50] }}{% if paste.content|length >
+                            50 %}...{% endif %}
+                        </td>
+                        <td>
+                            {{ paste.user.username if paste.user else 'unknown'
+                            }}
+                        </td>
+                        <td>
+                            <form
+                                method="POST"
+                                action="{{ url_for('delete_paste', paste_id=paste.id) }}"
+                                onsubmit="
+                                    return confirm(
+                                        'are you sure you want to delete this paste?',
+                                    );
+                                "
+                                style="display: inline"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                />
+                                <button class="btn" type="submit">
+                                    delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination controls -->
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="{{ url_for('pastes', page=page-1, search=search) }}"
+                >previous</a
+            >
+            {% else %}
+            <a class="disabled">previous</a>
+            {% endif %} page {{ page }} of {{ total_pages }} {% if page <
+            total_pages %}
+            <a href="{{ url_for('pastes', page=page+1, search=search) }}"
+                >next</a
+            >
+            {% else %}
+            <a class="disabled">next</a>
+            {% endif %}
+        </div>
+        {% endblock %}
+    </body>
+</html>

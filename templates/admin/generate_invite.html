@@ -1,0 +1,19 @@
+{% extends "layout.html" %} {% block content %}
+<!doctype html>
+<html lang="en">
+    <head> </head>
+    <body>
+        <div class="container-1">
+            <p>get your invite codes or check the admin panel idiot</p>
+            <form method="post">
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                />
+                <button class="btn" type="submit">generate invite code</button>
+            </form>
+            {% endblock %}
+        </div>
+    </body>
+</html>

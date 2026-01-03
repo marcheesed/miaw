@@ -1,0 +1,62 @@
+{% extends "layout.html" %} {% block content %}
+<!doctype html>
+<html>
+    <body>
+        <div class="container-1">
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>code</th>
+                        <th>created at</th>
+                        <th>used</th>
+                        <th>used by</th>
+                        <th>used at</th>
+                        <th>creator</th>
+                        <th>actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for code in codes %}
+                    <tr>
+                        <td>{{ code.code }}</td>
+                        <td>{{ code.created_at }}</td>
+                        <td>{{ 'yes' if code.used else 'no' }}</td>
+                        <td>
+                            {{ code.used_by_user.username if code.used_by_user
+                            else '' }}
+                        </td>
+                        <td>{{ code.used_at }}</td>
+                        <td>
+                            {{ code.creator.username if code.creator else '' }}
+                        </td>
+                        <td>
+                            <form
+                                action="{{ url_for('delete_invite_code', code_id=code.id) }}"
+                                method="post"
+                                style="display: inline"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                />
+                                <button
+                                    type="submit"
+                                    onclick="
+                                        return confirm(
+                                            'are you sure you want to delete this invite code?',
+                                        );
+                                    "
+                                >
+                                    delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endblock %}
+    </body>
+</html>

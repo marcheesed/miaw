@@ -1,0 +1,9 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container-2">
+    <p>hi, admin {{ current_user.username }}!</p>
+    <a href="{{ url_for('ip_logs') }}">ip logs</a> ---
+    <a href="{{ url_for('users') }}">users</a> ---
+    <a href="{{ url_for('pastes') }}">pastes</a> ---
+    <a href="{{ url_for('invite_codes') }}">invite codes</a>
+</div>
+{% endblock %}
