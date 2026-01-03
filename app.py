@@ -69,11 +69,10 @@ allowed_tags = [
 allowed_attributes = {
     "a": ["href", "title", "target"],
     "img": ["src", "alt", "title"],
-    "div": ["style"],
+    "div": ["style", "class", "id"],
     "span": ["style"],
     "style": [],
 }
-
 app = Flask(__name__)
 app.secret_key = "your-secret-key"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///pastes.db"
