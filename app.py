@@ -30,6 +30,7 @@ from werkzeug.utils import secure_filename
 ALLOWED_CSS_PROPERTIES = {
     "color",
     "background-color",
+    "background",
     "font-size",
     "margin",
     "padding",
