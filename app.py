@@ -87,7 +87,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 csrf = CSRFProtect(app)
 app.config["UPLOAD_FOLDER"] = "static/profile_pics"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-
+CURRENT_POLICY_VERSION = 2
 db = SQLAlchemy(app)
 
 
@@ -107,6 +107,7 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     custom_css = db.Column(db.Text, nullable=True)
     badges = db.relationship("Badge", secondary=user_badges, backref="users")
+    privacy_policy = db.Column(db.Integer, nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -265,6 +266,17 @@ def admin_required(f):
     return decorated_function
 
 
+@app.route("/accept_terms", methods=["GET", "POST"])
+def accept_terms():
+    if request.method == "POST":
+        # User has accepted the terms, update their privacy policy version
+        if g.current_user:
+            g.current_user.privacy_policy = CURRENT_POLICY_VERSION
+            db.session.commit()
+        return redirect(url_for("index"))
+    return render_template("accept_terms.html")
+
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     error = None
@@ -287,7 +299,7 @@ def register():
         if User.query.filter_by(username=username).first():
             error = "username already exists!!"
         else:
-            user = User(username=username)
+            user = User(username=username, privacy_policy=CURRENT_POLICY_VERSION)
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
@@ -886,6 +898,15 @@ def load_user():
     g.current_user = None
     if "user_id" in session:
         g.current_user = User.query.get(session["user_id"])
+
+
+@app.before_request
+def check_privacy_policy():
+    if "user_id" in session:
+        user = User.query.get(session["user_id"])
+        if user and user.privacy_policy != CURRENT_POLICY_VERSION:
+            if request.endpoint != "accept_terms":
+                return redirect(url_for("accept_terms"))
 
 
 @app.context_processor

@@ -1,4 +1,5 @@
 from app import (  # replace 'your_app_filename' with your script's filename
+    CURRENT_POLICY_VERSION,
     Badge,
     User,
     app,
@@ -15,7 +16,9 @@ def create_admin(username, password):
             return
 
         # Create new admin user
-        admin_user = User(username=username, is_admin=True)
+        admin_user = User(
+            username=username, is_admin=True, privacy_policy=CURRENT_POLICY_VERSION
+        )
         admin_user.set_password(password)
         db.session.add(admin_user)
         db.session.commit()

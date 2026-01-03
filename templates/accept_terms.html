@@ -1,0 +1,37 @@
+{% extends 'layout.html' %} {% block content %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+    </head>
+    <body>
+        <div class="container-1">
+            <h1>accept new terms</h1>
+            <p>
+                the <a href="https://miaw.cc/privacy">privacy policy</a> or
+                <a href="https://miaw.cc/terms">terms of service</a> has been
+                updated! by continuing to use the site, you agree to these
+                changes.
+            </p>
+            <form method="POST">
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                />
+                <button class="btn" type="submit">Accept</button>
+            </form>
+        </div>
+        <script>
+            document
+                .querySelector("form")
+                .addEventListener("submit", function (e) {
+                    if (!document.getElementById("accept").checked) {
+                        e.preventDefault();
+                        alert("You must accept the terms to continue.");
+                    }
+                });
+        </script>
+        {% endblock %}
+    </body>
+</html>

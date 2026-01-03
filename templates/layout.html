@@ -1,55 +1,54 @@
 <!doctype html>
-<html data-theme="light">
-    <html lang="en">
-        <head>
-            <meta charset="UTF-8" />
-            <meta name="theme-color" content="#fce49c" />
-            <meta
-                name="viewport"
-                content="width=device-width, initial-scale=1.0"
-            />
-            <title>miaw.cc</title>
-            <link
-                rel="stylesheet"
-                href="{{ url_for('static', filename='style.css') }}"
-            />
-            <link
-                rel="icon"
-                href="{{ url_for('static', filename='favicon.webp') }}"
-            />
-        </head>
-        <body>
-            <header style="display: flex; justify-content: space-between">
-                <div class="dropdown" id="myDropdown">
-                    <div class="dropbtn" id="dropbtn">
-                        {% include 'svgs/menu.html' %}
-                    </div>
-                    <div class="dropdown-content" id="dropdownContent">
-                        <a href="https://miaw.cc/info">info</a>
-                        <a href="{{ url_for('index') }}">create paste</a>
-                        {% if current_user %}
-                        <a
-                            href="{{ url_for('profile', username=current_user.username) }}"
-                            >profile</a
-                        >
-
-                        <a href="{{ url_for('dashboard') }}">dashboard</a>
-                        {% endif %} {% if current_user and current_user.is_admin
-                        %}
-                        <a href="{{ url_for('admin_panel') }}">admin</a>
-                        {% endif %} {% if current_user %}
-                        <a href="{{ url_for('logout') }}">logout</a>
-                        {% else %}
-                        <a href="{{ url_for('login') }}">login</a>
-                        <a href="{{ url_for('register') }}">register</a>
-                        {% endif %}
-                    </div>
+<html lang="en" data-theme="light">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="theme-color" content="#fce49c" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>miaw.cc</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='style.css') }}"
+        />
+        <link
+            rel="icon"
+            href="{{ url_for('static', filename='favicon.webp') }}"
+        />
+    </head>
+    <body>
+        <header style="display: flex; justify-content: space-between">
+            <div class="dropdown" id="myDropdown">
+                <div class="dropbtn" id="dropbtn">
+                    {% include 'svgs/menu.html' %}
                 </div>
-                {% include "svgs/theme_toggle.html" %}
-            </header>
-            <script src="{{ url_for('static', filename='js/dropdown.js') }}"></script>
-            <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-            {% block content %}{% endblock %}
-        </body>
-    </html>
+                <div class="dropdown-content" id="dropdownContent">
+                    <a href="https://miaw.cc/info">info</a>
+                    <a href="{{ url_for('index') }}">create paste</a>
+                    {% if current_user %}
+                    <a
+                        href="{{ url_for('profile', username=current_user.username) }}"
+                        >profile</a
+                    >
+                    <a href="{{ url_for('dashboard') }}">dashboard</a>
+                    {% endif %} {% if current_user and current_user.is_admin %}
+                    <a href="{{ url_for('admin_panel') }}">admin</a>
+                    {% endif %} {% if current_user %}
+                    <a href="{{ url_for('logout') }}">logout</a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}">login</a>
+                    <a href="{{ url_for('register') }}">register</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% include "svgs/theme_toggle.html" %}
+        </header>
+
+        {% block content %}{% endblock %}
+
+        <!-- Default scripts -->
+        <script src="{{ url_for('static', filename='js/dropdown.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+        <!-- Page-specific scripts -->
+        {% block scripts %}{% endblock %}
+    </body>
 </html>
