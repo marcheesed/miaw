@@ -23,6 +23,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
 from PIL import Image
+from sqlalchemy.orm import joinedload
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -501,6 +502,7 @@ def users():
         query.order_by(User.username)
         .offset((page - 1) * per_page)
         .limit(per_page)
+        .options(joinedload(User.badges))
         .all()
     )
 
@@ -510,8 +512,10 @@ def users():
             {
                 "user": user,
                 "banned": bool(BannedUser.query.filter_by(user_id=user.id).first()),
+                "badges": user.badges,
             }
         )
+
     badges = Badge.query.all()
 
     return render_template(
