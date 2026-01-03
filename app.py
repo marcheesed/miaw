@@ -799,10 +799,14 @@ def edit_profile():
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
 
-    if user.id != session.get("user_id"):
-        return redirect(url_for("profile", username=user.username))
+    # Check if the current user is the owner of the profile
+    is_owner = session.get("user_id") == user.id
 
     if request.method == "POST":
+        # Only allow the owner to update profile info
+        if not is_owner:
+            return redirect(url_for("profile", username=user.username))
+
         bio = request.form.get("bio", "")
         user.bio = bio
 
@@ -816,7 +820,8 @@ def profile(username):
         db.session.commit()
         return redirect(url_for("profile", username=user.username))
 
-    return render_template("profile.html", user=user)
+    # For GET requests, just render the profile page
+    return render_template("profile.html", user=user, is_owner=is_owner)
 
 
 @app.route("/dashboard")
