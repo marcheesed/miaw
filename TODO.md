@@ -27,3 +27,6 @@ x ip logs
 x admin pastes
 x user ip logs
 x admin/users
+
+customizable meta content for pastes
+adding a favicon / changing title too
