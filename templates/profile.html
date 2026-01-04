@@ -1,7 +1,24 @@
 {% extends "layout.html" %} {% block content %}
+
 <!doctype html>
 <html>
     <head>
+        <title>
+            {% block title %} {{ user.username }}'s profile {% endblock %}
+        </title>
+        {% if user.profile_picture %}
+        <meta
+            property="og:image"
+            content="{{ url_for('static', filename='profile_pics/' + user.profile_picture) }}"
+        />
+        {% else %}
+        <meta
+            property="og:image"
+            content="{{ url_for('static', filename='profile_pics/default_pfp.png') }}"
+        />
+        {% endif %}
+        <meta property="og:title" content="{{ user.username }}'s profile" />
+        <meta property="og:description" content="{{ user.bio }}" />
         {% if user.custom_css %}
         <style>
             {{ user.custom_css|safe }}

@@ -1,4 +1,12 @@
 {% extends "layout.html" %} {% block content %}
+
+<head>
+    <title>{% block title %} {{ paste.id }} {% endblock %}</title>
+    <meta
+        property="og:description"
+        content="{{ paste.content|truncate(150) }}"
+    />
+</head>
 <div id="content">
     <div class="full-container-1">
         <div class="container-1">
