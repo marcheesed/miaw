@@ -51,19 +51,12 @@ a:visited {
     color: var(--link-visited);
 }
 
-html {
-    height: 100vh;
-    background: linear-gradient(
-        to bottom,
-        var(--color-background-start) 0%,
-        var(--color-background-end) 100%
-    );
-}
-
 body {
     color: var(--color-icon);
     padding: 15px;
+    background-color: var(--color-background-end);
 }
+
 .container-1 {
     background: linear-gradient(
         to bottom,
