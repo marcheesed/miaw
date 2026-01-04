@@ -51,7 +51,6 @@ a:visited {
     color: var(--link-visited);
 }
 
-body,
 html {
     height: 100vh;
     background: linear-gradient(
