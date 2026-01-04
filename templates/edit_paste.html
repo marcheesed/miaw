@@ -120,14 +120,14 @@
                         .then((response) => response.json())
                         .then((data) => {
                             if (data.success) {
-                                alert("Ownership transferred successfully.");
+                                alert("ownership transferred successfully!");
                                 location.reload();
                             } else {
                                 showPopup(data.error);
                             }
                         })
                         .catch((error) => {
-                            showPopup("An error occurred.");
+                            showPopup("an error occurred.");
                             console.error("Error:", error);
                         });
                 });

@@ -43,12 +43,8 @@
         </header>
 
         {% block content %}{% endblock %}
-
-        <!-- Default scripts -->
         <script src="{{ url_for('static', filename='js/dropdown.js') }}"></script>
         <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-
-        <!-- Page-specific scripts -->
         {% block scripts %}{% endblock %}
     </body>
 </html>

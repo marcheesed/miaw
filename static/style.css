@@ -74,7 +74,7 @@ body {
     max-width: 1000px;
     margin: 20px auto;
     overflow: hidden;
-    line-height: 1.5rem;
+    line-height: 1.6rem;
 }
 
 .container-2 {
@@ -94,6 +94,7 @@ body {
     max-width: 600px;
     margin: 20px auto;
     overflow: hidden;
+    line-height: 1.6rem;
 }
 
 textarea {

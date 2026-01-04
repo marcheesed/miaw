@@ -30,13 +30,11 @@
                 <a href="{{ url_for('view_paste', paste_id=paste.id) }}"
                     >{{ url_for('view_paste', paste_id=paste.id) }}</a
                 >
-                <!-- Optional: show snippet of content -->
             </div>
             {% endfor %} {% else %}
             <div>No pastes yet.</div>
             {% endif %}
         </div>
-        <!-- Pagination Controls -->
         <div>
             {% if page > 1 %}
             <a href="{{ url_for('dashboard', page=page-1, search=search) }}"

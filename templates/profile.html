@@ -14,13 +14,13 @@
                 {% if user.profile_picture %}
                 <img
                     src="{{ url_for('static', filename='profile_pics/' + user.profile_picture) }}"
-                    alt="Profile Picture"
+                    alt="{{ user.username }}'s profile picture"
                     id="pfp"
                 />
                 {% else %}
                 <img
                     src="{{ url_for('static', filename='profile_pics/default_pfp.png') }}"
-                    alt="Profile Picture"
+                    alt="{{ user.username }}'s profile picture"
                     id="pfp"
                 />
                 {% endif %}

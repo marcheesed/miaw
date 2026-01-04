@@ -1,9 +1,6 @@
-import json
-import logging
 import os
 import re
 import secrets
-import uuid
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -22,70 +19,18 @@ from flask import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
-from flask_wtf.csrf import generate_csrf
 from PIL import Image
 from sqlalchemy.orm import joinedload
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-ALLOWED_CSS_PROPERTIES = {
-    "color",
-    "background-color",
-    "background",
-    "font-size",
-    "margin",
-    "padding",
-    "border",
-    "width",
-    "height",
-    "display",
-    "text-align",
-    "body",
-    "background-image",
-    "background-repeat",
-    "background-position",
-    "background-size",
-    "background-attachment",
-    "img",
-}
-
-allowed_tags = [
-    "b",
-    "i",
-    "u",
-    "a",
-    "pre",
-    "code",
-    "br",
-    "p",
-    "div",
-    "span",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "style",
-    "img",
-    "hr",
-    "button",
-]
-
-allowed_attributes = {
-    "a": ["href", "title", "target", "style", "class", "id"],
-    "img": ["src", "alt", "title", "style", "class", "id"],
-    "div": ["style", "class", "id"],
-    "span": ["style", "class", "id"],
-    "style": [],
-    "hr": ["style", "class", "id"],
-    "button": ["type", "style", "class", "id"],
-}
-
-
-with open("banned_urls.json", "r") as f:
-    BANNED_URLS = set(json.load(f))
-
+from properties import (
+    ALLOWED_CSS_PROPERTIES,
+    BANNED_URLS,
+    CURRENT_POLICY_VERSION,
+    allowed_attributes,
+    allowed_tags,
+)
 
 app = Flask(__name__)
 app.secret_key = "your-secret-key"
@@ -94,7 +39,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 csrf = CSRFProtect(app)
 app.config["UPLOAD_FOLDER"] = "static/profile_pics"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-CURRENT_POLICY_VERSION = 2
 db = SQLAlchemy(app)
 
 
@@ -207,11 +151,8 @@ def sanitize_css(css):
         prop = prop.strip().lower()
         value = value.strip()
 
-        # Block unsafe expressions or URLs
         if re.search(r"expression|url\(", value, re.IGNORECASE):
-            # If property is background-image, you might want to allow certain URLs
             if prop == "background-image":
-                # Optional: add URL validation here
                 pass
             else:
                 continue
@@ -276,7 +217,6 @@ def admin_required(f):
 @app.route("/accept_terms", methods=["GET", "POST"])
 def accept_terms():
     if request.method == "POST":
-        # User has accepted the terms, update their privacy policy version
         if g.current_user:
             g.current_user.privacy_policy = CURRENT_POLICY_VERSION
             db.session.commit()
@@ -329,7 +269,7 @@ def login():
     error = None
     ip = get_client_ip()
     if is_ip_banned(ip):
-        return "Your IP has been banned.", 403
+        return "your ip has been banned!", 403
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -339,7 +279,7 @@ def login():
             log_ip(username, "login")
             return redirect(url_for("index"))
         else:
-            error = "Invalid credentials"
+            error = "invalid credentials."
             log_ip(username, "failed login")
     return render_template("login.html", error=error)
 
@@ -354,7 +294,7 @@ def logout():
 def index():
     ip = get_client_ip()
     if is_ip_banned(ip):
-        return jsonify({"success": False, "error": "Your IP has been banned."}), 200
+        return jsonify({"success": False, "error": "your ip has been banned!"}), 200
 
     if request.method == "POST":
         if "user_id" not in session:
@@ -372,21 +312,15 @@ def index():
 
         custom_id = request.form.get("custom_id", "").strip()
 
-        # Check if custom_id is provided
         if custom_id:
-            # Optional: Validate format (alphanumeric, underscores, hyphens)
-            import re
-
             if not re.match(r"^[a-zA-Z0-9_-]+$", custom_id):
                 return jsonify(
                     {"success": False, "error": "invalid url format/characters"}
                 ), 200
 
-            # Check if custom_id is in banned list
             if custom_id in BANNED_URLS:
                 return jsonify({"success": False, "error": "this url is banned."}), 200
 
-            # Check if custom_id is already taken
             if Paste.query.get(custom_id):
                 return jsonify(
                     {"success": False, "error": "that url is already taken!"}
@@ -394,7 +328,6 @@ def index():
 
             paste_id = custom_id
         else:
-            # Generate a unique ID
             import uuid
 
             while True:
@@ -402,7 +335,6 @@ def index():
                 if not Paste.query.get(paste_id):
                     break
 
-        # Save the new paste
         new_paste = Paste(
             id=paste_id,
             content=content,
@@ -788,7 +720,6 @@ def change_password():
             }
         )
 
-    # For GET requests, render the form
     return render_template("change_password.html")
 
 
@@ -939,6 +870,5 @@ def inject_user():
     return dict(current_user=g.current_user)
 
 
-# Run the app
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

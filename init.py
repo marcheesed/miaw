@@ -1,4 +1,4 @@
-from app import (  # replace 'your_app_filename' with your script's filename
+from app import (
     CURRENT_POLICY_VERSION,
     Badge,
     User,
@@ -9,13 +9,10 @@ from app import (  # replace 'your_app_filename' with your script's filename
 
 def create_admin(username, password):
     with app.app_context():
-        # Check if user already exists
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             print(f"User '{username}' already exists.")
             return
-
-        # Create new admin user
         admin_user = User(
             username=username, is_admin=True, privacy_policy=CURRENT_POLICY_VERSION
         )
@@ -26,7 +23,6 @@ def create_admin(username, password):
 
 
 if __name__ == "__main__":
-    # Replace these with your desired admin credentials
     username = "admin"
     password = "password"
     create_admin(username, password)
