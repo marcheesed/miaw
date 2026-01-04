@@ -40,6 +40,7 @@
 
 * {
     box-sizing: border-box;
+    margin: 0;
 }
 
 a {
@@ -50,15 +51,17 @@ a:visited {
     color: var(--link-visited);
 }
 
-body {
+html {
+    height: 100vh;
     background: linear-gradient(
         to bottom,
         var(--color-background-start) 0%,
         var(--color-background-end) 100%
     );
+}
+
+body {
     color: var(--color-icon);
-    height: 100vh;
-    margin: 0;
     padding: 15px;
 }
 .container-1 {
