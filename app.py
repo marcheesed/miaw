@@ -276,7 +276,7 @@ def register():
 
             return redirect(url_for("index"))
 
-    return render_template("register.html", error=error)
+    return render_template("user/register.html", error=error)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -296,7 +296,7 @@ def login():
         else:
             error = "invalid credentials."
             log_ip(username, "failed login")
-    return render_template("login.html", error=error)
+    return render_template("user/login.html", error=error)
 
 
 @app.route("/logout")
@@ -763,7 +763,7 @@ def change_password():
             }
         )
 
-    return render_template("change_password.html")
+    return render_template("user/change_password.html")
 
 
 @app.route("/edit_profile", methods=["GET", "POST"])
@@ -820,7 +820,7 @@ def edit_profile():
 
         db.session.commit()
         return redirect(url_for("profile", username=user.username))
-    return render_template("edit_profile.html", user=user)
+    return render_template("user/edit_profile.html", user=user)
 
 
 @app.route("/profile/<username>", methods=["GET", "POST"])
@@ -846,7 +846,7 @@ def profile(username):
         db.session.commit()
         return redirect(url_for("profile", username=user.username))
 
-    return render_template("profile.html", user=user, is_owner=is_owner)
+    return render_template("user/profile.html", user=user, is_owner=is_owner)
 
 
 @app.route("/dashboard")
@@ -870,7 +870,7 @@ def dashboard():
     user_pastes = pastes_query.offset((page - 1) * per_page).limit(per_page).all()
 
     return render_template(
-        "dashboard.html",
+        "user/dashboard.html",
         pastes=user_pastes,
         page=page,
         total=total,
