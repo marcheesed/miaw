@@ -99,9 +99,6 @@
         <button class="btn" type="submit">save changes</button>
     </form>
 <div style="display: flex; gap: 3px">
-        <a href="{{ url_for('view_paste', paste_id=paste.id) }}"
-            ><button class="btn">cancel</button></a
-        >
         <form
             method="POST"
             action="{{ url_for('delete_paste', paste_id=paste.id) }}"
@@ -112,6 +109,10 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button class="btn" type="submit">delete paste</button>
         </form>
+
+        <a href="{{ url_for('view_paste', paste_id=paste.id) }}"
+            ><button class="btn">cancel</button></a
+        >
 </div>
     </div>
 </div>
