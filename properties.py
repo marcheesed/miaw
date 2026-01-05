@@ -66,16 +66,9 @@ allowed_tags = [
     "tfoot",
     "caption",
     "col",
-    "frame",
-    "rules",
-    "summary",
-    "width",
-    "height",
-    "display",
-    "text-align",
-    "body",
-    "img",
-    "form",
+    "colgroup",
+    "row",
+    "rowgroup",
 ]
 
 allowed_attributes = {

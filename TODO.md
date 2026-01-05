@@ -32,11 +32,9 @@ x customizable meta content for pastes
 x adding a favicon / changing title too
 
 x password locking of urls
-code editor (maybe)
-url limit per day
-markdown (maybe)
+x url limit per day
 x users being able to delete their accounts (duh)
 
 bugs:
 x dashboard fix
-css sanitization needs to happen
+x css sanitization needs to happen

@@ -1,7 +1,7 @@
 import os
 import re
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 import bleach
@@ -143,6 +143,14 @@ class Badge(db.Model):
     icon_url = db.Column(db.String(255))
 
 
+class ClaimLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    claimed_at = db.Column(db.DateTime, default=db.func.now())
+
+    user = db.relationship("User", backref="claim_logs")
+
+
 with app.app_context():
     db.create_all()
 
@@ -150,6 +158,7 @@ with app.app_context():
 
 
 def sanitize_css(css):
+    css = re.sub(r"@import[^;]*;", "", css, flags=re.IGNORECASE)
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
     declarations = css.split(";")
     sanitized_declarations = []
@@ -176,6 +185,15 @@ def sanitize_css(css):
     return "; ".join(sanitized_declarations)
 
 
+class NoImportCSSSanitizer(CSSSanitizer):
+    def sanitize_css_import(self, css):
+        css = re.sub(r"@import[^;]*;", "", css, flags=re.IGNORECASE)
+        return super().sanitize_css(css)
+
+
+css_sanitizer_instance = NoImportCSSSanitizer(
+    allowed_css_properties=ALLOWED_CSS_PROPERTIES
+)
 css_sanitizer_instance = CSSSanitizer(allowed_css_properties=ALLOWED_CSS_PROPERTIES)
 
 
@@ -283,6 +301,19 @@ def index():
         if "user_id" not in session:
             return jsonify({"success": False, "error": "please log in to submit!"}), 200
 
+        user_id = session["user_id"]
+        one_day_ago = datetime.now(timezone.utc) - timedelta(days=1)
+        claim_count = (
+            Paste.query.filter_by(user_id=user_id)
+            .filter(Paste.published_at >= one_day_ago)
+            .count()
+        )
+
+        if claim_count >= 10:
+            return jsonify(
+                {"success": False, "error": "you have reached the daily claim limit."}
+            ), 200
+
         raw_content = request.form.get("content")
         if raw_content is None:
             return jsonify({"success": False, "error": "no content provided!"}), 200
@@ -300,15 +331,12 @@ def index():
                 return jsonify(
                     {"success": False, "error": "invalid url format/characters"}
                 ), 200
-
             if custom_id in BANNED_URLS:
                 return jsonify({"success": False, "error": "this url is banned."}), 200
-
             if Paste.query.get(custom_id):
                 return jsonify(
                     {"success": False, "error": "that url is already taken!"}
                 ), 200
-
             paste_id = custom_id
         else:
             import uuid
@@ -321,7 +349,7 @@ def index():
         new_paste = Paste(
             id=paste_id,
             content=content,
-            user_id=session["user_id"],
+            user_id=user_id,
             published_at=datetime.now(timezone.utc),
             last_edited_at=datetime.now(timezone.utc),
         )
@@ -663,7 +691,7 @@ def delete_paste(paste_id):
 
     if paste.user_id != user.id and not user.is_admin:
         abort(403)
-
+    paste.is_deleted = True
     db.session.delete(paste)
     db.session.commit()
     return redirect(url_for("index"))

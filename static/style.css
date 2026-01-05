@@ -182,6 +182,10 @@ input {
     color: var(--color-icon);
 }
 
+#popup-message {
+    line-height: 1.5rem;
+}
+
 #popup {
     font-family: "Times New Roman", serif;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
