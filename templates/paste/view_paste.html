@@ -14,7 +14,11 @@
         href="{{ paste.favicon_url or url_for('static', filename='favicon.ico') }}"
     />
     {% endif %}
+    {% if paste.meta_image %}
     <meta property="og:image" content="{{ paste.meta_image }}" />
+    {% else %}
+    <meta property="og:image" content="{{ url_for('static', filename='favicon.webp') }}" />
+    {% endif %}
     {% if paste.theme_color %}
     <meta name="theme-color" content="{{ paste.theme_color }}" />
     {% endif %}
@@ -36,9 +40,9 @@
             >
             {% if current_user.id == paste.user_id or current_user.is_admin %}
             <a
-                href="{{ url_for('transfer_ownership', paste_id=paste.id) }}"
+                href="{{ url_for('paste_extras', paste_id=paste.id) }}"
                 onclick="transferOwnership(event, '{{ paste.id }}')"
-                ><button class="btn">transfer</button></a
+                ><button class="btn">extras</button></a
             >
             {% endif %}
 </div>
@@ -46,7 +50,7 @@
                 <p>
                     {% if published_at %} published on: {{
                     published_at.strftime("%Y-%m-%d %H:%M") }} UTC {% else %}
-                    none {% endif %}
+                    none tf {% endif %}
                 </p>
                 {% if last_edited_at %}
                 <p>

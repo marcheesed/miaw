@@ -50,21 +50,21 @@
                     type="text"
                     id="page_title"
                     name="page_title"
-                    value="{{ paste.page_title | default('') }}"
+                    value="{{ paste.page_title }}"
                     placeholder="page title here!"
                 />
                 <input
                     type="text"
                     id="meta_image"
                     name="meta_image"
-                    value="{{ paste.meta_image | default('') }}"
+                    value="{{ paste.meta_image }}"
                     placeholder="meta image url here!"
                 />
                 <input
                     type="text"
                     id="theme_color"
                     name="theme_color"
-                    value="{{ paste.theme_color | default('') }}"
+                    value="{{ paste.theme_color }}"
                     placeholder="meta desc theme color here!"
                 />
             </div>
@@ -82,13 +82,13 @@
                     type="text"
                     id="favicon_url"
                     name="favicon_url"
-                    value="{{ paste.favicon_url | default('') }}"
+                    value="{{ paste.favicon_url }}"
                     placeholder="favicon url here!"
                 />
                 <textarea
                     id="meta_description"
                     name="meta_description"
-                    value="{{ paste.meta_description | default('') }}"
+                    value="{{ paste.meta_description }}"
                     placeholder="meta description here!"
                 >
 {{ paste.meta_description }}</textarea

@@ -1,0 +1,18 @@
+{% extends "layout.html" %} {% block content %}
+
+<div class="container-2">
+    <a href="{{ url_for('edit_paste', paste_id=paste.id) }}">edit</a> ===
+    <a href="{{ url_for('transfer_ownership', paste_id=paste.id) }}"
+        >transfer ownership</a
+    >
+    ===
+    <a href="{{ url_for('update_paste_password', paste_id=paste.id) }}"
+        >set a password</a
+    >
+    <p>
+        this is <b> a temporary hub for paste extras</b> that cannot be included
+        in the main layout. only admins and the owner of the paste can access
+        this page.
+    </p>
+</div>
+{% endblock %}

@@ -82,6 +82,7 @@ class Paste(db.Model):
     theme_color = db.Column(db.String(7), nullable=True)
     page_title = db.Column(db.String(255), nullable=True)
     favicon_url = db.Column(db.String(255), nullable=True)
+    password_hash = db.Column(db.String(128), nullable=True)
 
 
 class IPLog(db.Model):
@@ -135,6 +136,8 @@ class Badge(db.Model):
 
 with app.app_context():
     db.create_all()
+
+# -------- helpers ----------
 
 
 def sanitize_content(content):
@@ -231,14 +234,74 @@ def access_denied(e):
     return render_template("errors/403.html"), 403
 
 
-@app.route("/accept_terms", methods=["GET", "POST"])
-def accept_terms():
+def get_form_value(key):
+    value = request.form.get(key)
+    return value if value is not None else ""
+
+
+# -------- app routes --------
+
+
+@app.route("/", methods=["GET", "POST"])
+def index():
+    ip = get_client_ip()
+    if is_ip_banned(ip):
+        return jsonify({"success": False, "error": "your ip has been banned!"}), 200
+
     if request.method == "POST":
-        if g.current_user:
-            g.current_user.privacy_policy = CURRENT_POLICY_VERSION
-            db.session.commit()
-        return redirect(url_for("index"))
-    return render_template("accept_terms.html")
+        if "user_id" not in session:
+            return jsonify({"success": False, "error": "please log in to submit!"}), 200
+
+        raw_content = request.form.get("content")
+        if raw_content is None:
+            return jsonify({"success": False, "error": "no content provided!"}), 200
+
+        content = sanitize_content(raw_content)
+        if not content:
+            return jsonify(
+                {"success": False, "error": "content is empty after sanitization."}
+            ), 200
+
+        custom_id = request.form.get("custom_id", "").strip()
+
+        if custom_id:
+            if not re.match(r"^[a-zA-Z0-9_-]+$", custom_id):
+                return jsonify(
+                    {"success": False, "error": "invalid url format/characters"}
+                ), 200
+
+            if custom_id in BANNED_URLS:
+                return jsonify({"success": False, "error": "this url is banned."}), 200
+
+            if Paste.query.get(custom_id):
+                return jsonify(
+                    {"success": False, "error": "that url is already taken!"}
+                ), 200
+
+            paste_id = custom_id
+        else:
+            import uuid
+
+            while True:
+                paste_id = uuid.uuid4().hex[:8]
+                if not Paste.query.get(paste_id):
+                    break
+
+        new_paste = Paste(
+            id=paste_id,
+            content=content,
+            user_id=session["user_id"],
+            published_at=datetime.now(timezone.utc),
+            last_edited_at=datetime.now(timezone.utc),
+        )
+        db.session.add(new_paste)
+        db.session.commit()
+
+        return jsonify(
+            {"success": True, "redirect_url": url_for("view_paste", paste_id=paste_id)}
+        )
+
+    return render_template("index.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -307,66 +370,491 @@ def logout():
     return redirect(url_for("index"))
 
 
-@app.route("/", methods=["GET", "POST"])
-def index():
-    ip = get_client_ip()
-    if is_ip_banned(ip):
-        return jsonify({"success": False, "error": "your ip has been banned!"}), 200
+# ------------ pastes ------------
 
-    if request.method == "POST":
-        if "user_id" not in session:
-            return jsonify({"success": False, "error": "please log in to submit!"}), 200
 
-        raw_content = request.form.get("content")
-        if raw_content is None:
-            return jsonify({"success": False, "error": "no content provided!"}), 200
+@app.route("/<paste_id>")
+def view_paste(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        abort(404)
 
-        content = sanitize_content(raw_content)
-        if not content:
-            return jsonify(
-                {"success": False, "error": "content is empty after sanitization."}
-            ), 200
+    if paste.password_hash:
+        if not session.get(f"paste_{paste_id}_unlocked"):
+            return redirect(url_for("view_protected_paste", paste_id=paste_id))
 
-        custom_id = request.form.get("custom_id", "").strip()
+    user = User.query.get(session.get("user_id"))
+    safe_content = sanitize_content(paste.content)
 
-        if custom_id:
-            if not re.match(r"^[a-zA-Z0-9_-]+$", custom_id):
-                return jsonify(
-                    {"success": False, "error": "invalid url format/characters"}
-                ), 200
+    cookie_key = "viewed_paste"
 
-            if custom_id in BANNED_URLS:
-                return jsonify({"success": False, "error": "this url is banned."}), 200
-
-            if Paste.query.get(custom_id):
-                return jsonify(
-                    {"success": False, "error": "that url is already taken!"}
-                ), 200
-
-            paste_id = custom_id
-        else:
-            import uuid
-
-            while True:
-                paste_id = uuid.uuid4().hex[:8]
-                if not Paste.query.get(paste_id):
-                    break
-
-        new_paste = Paste(
-            id=paste_id,
-            content=content,
-            user_id=session["user_id"],
-            published_at=datetime.now(timezone.utc),
-            last_edited_at=datetime.now(timezone.utc),
+    response = make_response(
+        render_template(
+            "paste/view_paste.html",
+            paste=paste,
+            current_user=user,
+            safe_content=safe_content,
+            published_at=paste.published_at,
+            last_edited_at=paste.last_edited_at,
+            logged_in=("user_id" in session),
         )
-        db.session.add(new_paste)
+    )
+
+    if not request.cookies.get(cookie_key):
+        paste.views = (paste.views or 0) + 1
         db.session.commit()
 
-        return jsonify(
-            {"success": True, "redirect_url": url_for("view_paste", paste_id=paste_id)}
+        response.set_cookie(
+            cookie_key, "true", max_age=60 * 60 * 24 * 7, path=f"/{paste_id}"
         )
 
-    return render_template("index.html")
+    return response
+
+
+@app.route("/edit/<paste_id>", methods=["GET", "POST"])
+@login_required
+def edit_paste(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        abort(404)
+
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
+
+    if paste.user_id != user.id and not user.is_admin:
+        abort(403)
+
+    if request.method == "POST":
+        raw_content = request.form.get("content")
+        if raw_content is None:
+            abort(400)
+
+        sanitized_content = sanitize_content(raw_content)
+        if sanitized_content is None:
+            sanitized_content = ""
+
+        paste.content = sanitized_content
+        paste.last_edited_at = datetime.now(timezone.utc)
+
+        def get_form_value(key):
+            value = request.form.get(key)
+            if value is None:
+                return ""
+            value_stripped = value.strip()
+            if value_stripped.lower() == "none" or value_stripped == "":
+                return ""
+            return value
+
+        paste.meta_description = get_form_value("meta_description")
+        paste.meta_image = get_form_value("meta_image")
+        paste.theme_color = get_form_value("theme_color")
+        paste.page_title = get_form_value("page_title")
+        paste.favicon_url = get_form_value("favicon_url")
+
+        db.session.commit()
+
+        return redirect(url_for("view_paste", paste_id=paste_id))
+
+    for attr in [
+        "meta_description",
+        "meta_image",
+        "theme_color",
+        "page_title",
+        "favicon_url",
+    ]:
+        value = getattr(paste, attr)
+        if value is None or value.lower() == "none":
+            setattr(paste, attr, "")
+
+    return render_template("paste/edit_paste.html", paste=paste)
+
+
+@app.route("/update_password/<paste_id>", methods=["GET", "POST"])
+@login_required
+def update_paste_password(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        return "paste not found.", 404
+
+    current_user = User.query.get(session.get("user_id"))
+    if not current_user:
+        return redirect(url_for("login"))
+
+    if paste.user_id != current_user.id and not current_user.is_admin:
+        return "you don't have permission.", 403
+
+    if request.method == "POST":
+        new_password = request.form.get("new_password")
+        if new_password:
+            paste.password_hash = generate_password_hash(new_password)
+            db.session.commit()
+            return redirect(url_for("view_paste", paste_id=paste_id))
+        else:
+            return jsonify(success=False, error="password cannot be empty.")
+
+    return render_template("paste/update_password.html", paste=paste)
+
+
+@app.route("/remove_paste_password/<paste_id>", methods=["POST"])
+def remove_paste_password(paste_id):
+    paste = Paste.query.get_or_404(paste_id)
+
+    paste.password = None
+
+    try:
+        db.session.commit()
+        return redirect(url_for("view_paste", paste_id=paste_id))
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(
+            success=False, error=f"error removing password for {paste_id}: {e}"
+        )
+
+
+@app.route("/<paste_id>/protected", methods=["GET", "POST"])
+def view_paste_protected(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        abort(404)
+
+    if not paste.password_hash:
+        return redirect(url_for("view_paste", paste_id=paste_id))
+
+    if request.method == "POST":
+        entered_password = request.form.get("password")
+        if entered_password and check_password_hash(
+            paste.password_hash, entered_password
+        ):
+            session[f"paste_{paste_id}_unlocked"] = True
+            return redirect(url_for("view_paste", paste_id=paste_id))
+        else:
+            error = "Incorrect password. Please try again."
+            return render_template("paste/password_prompt.html", error=error)
+
+    if session.get(f"paste_{paste_id}_unlocked"):
+        return redirect(url_for("view_paste", paste_id=paste_id))
+
+    return render_template("paste/password_prompt.html")
+
+
+@app.route("/<paste_id>/protected", methods=["GET", "POST"])
+def view_protected_paste(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        abort(404)
+
+    if not paste.password_hash:
+        return redirect(url_for("view_paste", paste_id=paste_id))
+
+    if request.method == "POST":
+        entered_password = request.form.get("password")
+        if entered_password and check_password_hash(
+            paste.password_hash, entered_password
+        ):
+            session[f"paste_{paste_id}_unlocked"] = True
+            return redirect(url_for("view_paste", paste_id=paste_id))
+        else:
+            error = "incorrect password. please try again."
+            return render_template("paste/password_prompt.html", error=error)
+
+    if session.get(f"paste_{paste_id}_unlocked"):
+        return redirect(url_for("view_paste", paste_id=paste_id))
+
+    return render_template("paste/password_prompt.html")
+
+
+@app.route("/transfer/<paste_id>", methods=["GET"])
+@login_required
+def transfer_ownership(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        return "paste not found.", 404
+
+    current_user_obj = User.query.get(session.get("user_id"))
+    if current_user_obj is None:
+        return redirect(url_for("login"))
+
+    if paste.user_id != current_user_obj.id and not current_user_obj.is_admin:
+        return "you don't have permission.", 403
+
+    return render_template("paste/transfer_paste.html", paste=paste)
+
+
+@app.route("/transfer/<paste_id>", methods=["POST"])
+@login_required
+def handle_transfer(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        return jsonify(success=False, error="paste not found!"), 404
+
+    current_user_obj = User.query.get(session.get("user_id"))
+    if current_user_obj is None:
+        return jsonify(success=False, error="user not logged in!!!"), 401
+
+    if paste.user_id != current_user_obj.id and not current_user_obj.is_admin:
+        return jsonify(success=False, error="you don't have the perms for this"), 403
+
+    new_owner_username = request.form.get("new_owner")
+    new_owner = User.query.filter_by(username=new_owner_username).first()
+    if not new_owner:
+        return jsonify(
+            success=False, error="new owner ...not found? check your spelling"
+        ), 400
+
+    if new_owner.id == current_user_obj.id:
+        return jsonify(
+            success=False,
+            error="you cannot transfer the paste to yourself.",
+        ), 400
+
+    paste.user_id = new_owner.id
+    db.session.commit()
+
+    return jsonify(success=True)
+
+
+@app.route("/<paste_id>/delete", methods=["POST"])
+@login_required
+def delete_paste(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        abort(404)
+
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
+
+    if paste.user_id != user.id and not user.is_admin:
+        abort(403)
+
+    db.session.delete(paste)
+    db.session.commit()
+    return redirect(url_for("index"))
+
+
+@app.route("/<paste_id>/report")
+@login_required
+def report(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    return render_template("paste/report.html", paste=paste)
+
+
+@app.route("/<paste_id>/report", methods=["POST"])
+def report_post(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    if not current_user.is_authenticated:
+        abort(401)
+
+    if paste.user_id != current_user.id:
+        abort(403)
+
+    paste.user_id = None
+    db.session.commit()
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/<paste_id>/reclaim")
+@login_required
+def reclaim(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    return render_template("paste/reclaim.html", paste=paste)
+
+
+@app.route("/<paste_id>/reclaim", methods=["POST"])
+def reclaim_post(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    if paste.user_id != current_user.id:
+        abort(403)
+    paste.user_id = None
+    db.session.commit()
+    return redirect(url_for("dashboard", paste=paste))
+
+
+@app.route("/extras/<paste_id>")
+@login_required
+def paste_extras(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    return render_template("paste/paste_extras.html", paste=paste)
+
+
+#  ------ user side --------
+
+
+@app.route("/edit_profile", methods=["GET", "POST"])
+@login_required
+def edit_profile() -> ResponseReturnValue:
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        custom_css_input = request.form.get("custom_css", "").strip()
+        declarations = extract_css_declarations(custom_css_input)
+        sanitized_declarations = sanitize_css(declarations)
+        match = re.search(r"\{[^}]*\}", custom_css_input)
+        if match:
+            full_css = (
+                custom_css_input[: match.start()]
+                + "{"
+                + sanitized_declarations
+                + "}"
+                + custom_css_input[match.end() :]
+            )
+        else:
+            full_css = custom_css_input
+        user.custom_css = full_css
+
+        bio_html = request.form.get("bio", "")
+        user.bio = bio_html
+
+        file = request.files.get("profile_picture")
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            webp_filename = f"user_{user.id}.webp"
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            webp_filepath = os.path.join(app.config["UPLOAD_FOLDER"], webp_filename)
+            file.save(filepath)
+            try:
+                img = Image.open(filepath)
+                img.save(webp_filepath, "WEBP")
+                os.remove(filepath)
+                old_pfp = user.profile_picture
+                if old_pfp and old_pfp != webp_filename:
+                    old_pfp_path = os.path.join(app.config["UPLOAD_FOLDER"], old_pfp)
+                    if os.path.exists(old_pfp_path):
+                        os.remove(old_pfp_path)
+                user.profile_picture = webp_filename
+            except Exception as e:
+                print(f"Error converting image: {e}")
+                user.profile_picture = webp_filename
+
+        new_username = request.form.get("username", "").strip()
+        if new_username and new_username != user.username:
+            print(f"Attempting to change username to: {new_username}")
+            existing_user = User.query.filter_by(username=new_username).first()
+            if not existing_user:
+                user.username = new_username
+            else:
+                error_message = "username already exists.. please choose a different one.ill make this nicer later."
+                return render_template(
+                    "user/edit_profile.html", user=user, error=error_message
+                )
+
+        db.session.commit()
+        return redirect(url_for("profile", username=user.username))
+    return render_template("user/edit_profile.html", user=user)
+
+
+@app.route("/profile/<username>", methods=["GET", "POST"])
+def profile(username):
+    user = User.query.filter_by(username=username).first_or_404()
+
+    is_owner = session.get("user_id") == user.id
+
+    if request.method == "POST":
+        if not is_owner:
+            return redirect(url_for("profile", username=user.username))
+
+        bio = request.form.get("bio", "")
+        user.bio = bio
+
+        file = request.files.get("profile_picture")
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            file.save(filepath)
+            user.profile_picture = filename
+
+        db.session.commit()
+        return redirect(url_for("profile", username=user.username))
+
+    return render_template("user/profile.html", user=user, is_owner=is_owner)
+
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        session.pop("user_id", None)
+        return redirect(url_for("login"))
+
+    search_query = request.args.get("search", "")
+    page = int(request.args.get("page", 1))
+    per_page = 10
+
+    pastes_query = Paste.query.filter_by(user_id=user.id)
+
+    if search_query:
+        pastes_query = pastes_query.filter(Paste.content.contains(search_query))
+
+    total = pastes_query.count()
+    user_pastes = pastes_query.offset((page - 1) * per_page).limit(per_page).all()
+
+    return render_template(
+        "user/dashboard.html",
+        pastes=user_pastes,
+        page=page,
+        total=total,
+        per_page=per_page,
+        search=search_query,
+    )
+
+
+@app.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        current_password = request.form.get("current_password", "").strip()
+        new_password = request.form.get("new_password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
+
+        if not user.check_password(current_password):
+            return jsonify(
+                {"success": False, "error": "current password is incorrect."}
+            )
+
+        if new_password != confirm_password:
+            return jsonify({"success": False, "error": "new passwords do not match."})
+
+        user.set_password(new_password)
+        db.session.commit()
+        return jsonify(
+            {
+                "success": True,
+                "redirect_url": url_for("profile", username=user.username),
+            }
+        )
+
+    return render_template("user/change_password.html")
+
+
+@app.route("/accept_terms", methods=["GET", "POST"])
+def accept_terms():
+    if request.method == "POST":
+        if g.current_user:
+            g.current_user.privacy_policy = CURRENT_POLICY_VERSION
+            db.session.commit()
+        return redirect(url_for("index"))
+    return render_template("accept_terms.html")
+
+
+# ------- admin --------
 
 
 @app.route("/admin")
@@ -522,39 +1010,6 @@ def users():
     )
 
 
-@app.route("/<paste_id>")
-def view_paste(paste_id):
-    paste = Paste.query.get(paste_id)
-    if not paste:
-        abort(404)
-    user = User.query.get(session.get("user_id"))
-    safe_content = sanitize_content(paste.content)
-
-    cookie_key = "viewed_paste"
-
-    response = make_response(
-        render_template(
-            "paste/view_paste.html",
-            paste=paste,
-            current_user=user,
-            safe_content=safe_content,
-            published_at=paste.published_at,
-            last_edited_at=paste.last_edited_at,
-            logged_in=("user_id" in session),
-        )
-    )
-
-    if not request.cookies.get(cookie_key):
-        paste.views = (paste.views or 0) + 1
-        db.session.commit()
-
-        response.set_cookie(
-            cookie_key, "true", max_age=60 * 60 * 24 * 7, path=f"/{paste_id}"
-        )
-
-    return response
-
-
 @app.route("/admin/ban_ip", methods=["POST"])
 @admin_required
 def ban_ip():
@@ -642,312 +1097,6 @@ def delete_invite_code(code_id):
     db.session.delete(code)
     db.session.commit()
     return redirect(url_for("all_invite_codes"))
-
-
-@app.route("/edit/<paste_id>", methods=["GET", "POST"])
-@login_required
-def edit_paste(paste_id):
-    paste = Paste.query.get(paste_id)
-    if not paste:
-        abort(404)
-
-    user = User.query.get(session.get("user_id"))
-    if user is None:
-        return redirect(url_for("login"))
-
-    if paste.user_id != user.id and not user.is_admin:
-        abort(403)
-
-    if request.method == "POST":
-        raw_content = request.form.get("content")
-        if raw_content is None:
-            abort(400)
-
-        sanitized_content = sanitize_content(raw_content)
-        if sanitized_content is None:
-            sanitized_content = ""
-
-        paste.content = sanitized_content
-        paste.last_edited_at = datetime.now(timezone.utc)
-
-        paste.meta_description = request.form.get("meta_description")
-        paste.meta_image = request.form.get("meta_image")
-        paste.theme_color = request.form.get("theme_color")
-        paste.page_title = request.form.get("page_title")
-        paste.favicon_url = request.form.get("favicon_url")
-
-        db.session.commit()
-        return redirect(url_for("view_paste", paste_id=paste_id))
-
-    return render_template("paste/edit_paste.html", paste=paste)
-
-
-@app.route("/transfer/<paste_id>", methods=["GET"])
-@login_required
-def transfer_ownership(paste_id):
-    paste = Paste.query.get(paste_id)
-    if not paste:
-        return "paste not found.", 404
-
-    current_user_obj = User.query.get(session.get("user_id"))
-    if current_user_obj is None:
-        return redirect(url_for("login"))
-
-    if paste.user_id != current_user_obj.id and not current_user_obj.is_admin:
-        return "you don't have permission.", 403
-
-    return render_template("paste/transfer_paste.html", paste=paste)
-
-
-@app.route("/transfer/<paste_id>", methods=["POST"])
-@login_required
-def handle_transfer(paste_id):
-    paste = Paste.query.get(paste_id)
-    if not paste:
-        return jsonify(success=False, error="paste not found!"), 404
-
-    current_user_obj = User.query.get(session.get("user_id"))
-    if current_user_obj is None:
-        return jsonify(success=False, error="User not logged in."), 401
-
-    if paste.user_id != current_user_obj.id and not current_user_obj.is_admin:
-        return jsonify(success=False, error="you don't have the perms for this"), 403
-
-    new_owner_username = request.form.get("new_owner")
-    new_owner = User.query.filter_by(username=new_owner_username).first()
-    if not new_owner:
-        return jsonify(
-            success=False, error="new owner ...not found? check your spelling"
-        ), 400
-
-    if new_owner.id == current_user_obj.id:
-        return jsonify(
-            success=False,
-            error="no patrick, you cannot transfer the paste to yourself.",
-        ), 400
-
-    paste.user_id = new_owner.id
-    db.session.commit()
-
-    return jsonify(success=True)
-
-
-@app.route("/<paste_id>/delete", methods=["POST"])
-@login_required
-def delete_paste(paste_id):
-    paste = Paste.query.get(paste_id)
-    if not paste:
-        abort(404)
-
-    user = User.query.get(session.get("user_id"))
-    if user is None:
-        return redirect(url_for("login"))
-
-    if paste.user_id != user.id and not user.is_admin:
-        abort(403)
-
-    db.session.delete(paste)
-    db.session.commit()
-    return redirect(url_for("index"))
-
-
-@app.route("/change_password", methods=["GET", "POST"])
-@login_required
-def change_password():
-    user = User.query.get(session.get("user_id"))
-    if user is None:
-        return redirect(url_for("login"))
-
-    if request.method == "POST":
-        current_password = request.form.get("current_password", "").strip()
-        new_password = request.form.get("new_password", "").strip()
-        confirm_password = request.form.get("confirm_password", "").strip()
-
-        if not user.check_password(current_password):
-            return jsonify(
-                {"success": False, "error": "current password is incorrect."}
-            )
-
-        if new_password != confirm_password:
-            return jsonify({"success": False, "error": "new passwords do not match."})
-
-        user.set_password(new_password)
-        db.session.commit()
-        return jsonify(
-            {
-                "success": True,
-                "redirect_url": url_for("profile", username=user.username),
-            }
-        )
-
-    return render_template("user/change_password.html")
-
-
-@app.route("/edit_profile", methods=["GET", "POST"])
-@login_required
-def edit_profile() -> ResponseReturnValue:
-    user = User.query.get(session.get("user_id"))
-    if user is None:
-        return redirect(url_for("login"))
-
-    if request.method == "POST":
-        custom_css_input = request.form.get("custom_css", "").strip()
-        declarations = extract_css_declarations(custom_css_input)
-        sanitized_declarations = sanitize_css(declarations)
-        match = re.search(r"\{[^}]*\}", custom_css_input)
-        if match:
-            full_css = (
-                custom_css_input[: match.start()]
-                + "{"
-                + sanitized_declarations
-                + "}"
-                + custom_css_input[match.end() :]
-            )
-        else:
-            full_css = custom_css_input
-        user.custom_css = full_css
-
-        bio_html = request.form.get("bio", "")
-        user.bio = bio_html
-
-        file = request.files.get("profile_picture")
-        if file and file.filename:
-            filename = secure_filename(file.filename)
-            webp_filename = f"user_{user.id}.webp"
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            webp_filepath = os.path.join(app.config["UPLOAD_FOLDER"], webp_filename)
-            file.save(filepath)
-            try:
-                img = Image.open(filepath)
-                img.save(webp_filepath, "WEBP")
-                os.remove(filepath)
-                old_pfp = user.profile_picture
-                if old_pfp and old_pfp != webp_filename:
-                    old_pfp_path = os.path.join(app.config["UPLOAD_FOLDER"], old_pfp)
-                    if os.path.exists(old_pfp_path):
-                        os.remove(old_pfp_path)
-                user.profile_picture = webp_filename
-            except Exception as e:
-                print(f"Error converting image: {e}")
-                user.profile_picture = webp_filename
-
-        new_username = request.form.get("username", "").strip()
-        if new_username and new_username != user.username:
-            print(f"Attempting to change username to: {new_username}")
-            existing_user = User.query.filter_by(username=new_username).first()
-            if not existing_user:
-                user.username = new_username
-            else:
-                error_message = "username already exists.. please choose a different one.ill make this nicer later."
-                return render_template(
-                    "user/edit_profile.html", user=user, error=error_message
-                )
-
-        db.session.commit()
-        return redirect(url_for("profile", username=user.username))
-    return render_template("user/edit_profile.html", user=user)
-
-
-@app.route("/profile/<username>", methods=["GET", "POST"])
-def profile(username):
-    user = User.query.filter_by(username=username).first_or_404()
-
-    is_owner = session.get("user_id") == user.id
-
-    if request.method == "POST":
-        if not is_owner:
-            return redirect(url_for("profile", username=user.username))
-
-        bio = request.form.get("bio", "")
-        user.bio = bio
-
-        file = request.files.get("profile_picture")
-        if file and file.filename:
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            file.save(filepath)
-            user.profile_picture = filename
-
-        db.session.commit()
-        return redirect(url_for("profile", username=user.username))
-
-    return render_template("user/profile.html", user=user, is_owner=is_owner)
-
-
-@app.route("/dashboard")
-@login_required
-def dashboard():
-    user = User.query.get(session.get("user_id"))
-    if user is None:
-        session.pop("user_id", None)
-        return redirect(url_for("login"))
-
-    search_query = request.args.get("search", "")
-    page = int(request.args.get("page", 1))
-    per_page = 10
-
-    pastes_query = Paste.query.filter_by(user_id=user.id)
-
-    if search_query:
-        pastes_query = pastes_query.filter(Paste.content.contains(search_query))
-
-    total = pastes_query.count()
-    user_pastes = pastes_query.offset((page - 1) * per_page).limit(per_page).all()
-
-    return render_template(
-        "user/dashboard.html",
-        pastes=user_pastes,
-        page=page,
-        total=total,
-        per_page=per_page,
-        search=search_query,
-    )
-
-
-@app.route("/<paste_id>/report")
-@login_required
-def report(paste_id):
-    paste = Paste.query.get(paste_id)
-    if paste is None:
-        abort(404)
-    return render_template("paste/report.html", paste=paste)
-
-
-@app.route("/<paste_id>/report", methods=["POST"])
-def report_post(paste_id):
-    paste = Paste.query.get(paste_id)
-    if paste is None:
-        abort(404)
-    if not current_user.is_authenticated:
-        abort(401)
-
-    if paste.user_id != current_user.id:
-        abort(403)
-
-    paste.user_id = None
-    db.session.commit()
-    return redirect(url_for("dashboard"))
-
-
-@app.route("/<paste_id>/reclaim")
-@login_required
-def reclaim(paste_id):
-    paste = Paste.query.get(paste_id)
-    if paste is None:
-        abort(404)
-    return render_template("paste/reclaim.html", paste=paste)
-
-
-@app.route("/<paste_id>/reclaim", methods=["POST"])
-def reclaim_post(paste_id):
-    paste = Paste.query.get(paste_id)
-    if paste is None:
-        abort(404)
-    if paste.user_id != current_user.id:
-        abort(403)
-    paste.user_id = None
-    db.session.commit()
-    return redirect(url_for("dashboard", paste=paste))
 
 
 @app.context_processor
