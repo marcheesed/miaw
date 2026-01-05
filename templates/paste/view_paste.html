@@ -34,8 +34,7 @@
             <a href="#" onclick="editPaste(event, '{{ paste.id }}')"
                 ><button class="btn">edit</button></a
             >
-            {% if current_user.id == paste.user_id or current_user.id ==
-            is_admin %}
+            {% if current_user.id == paste.user_id or current_user.is_admin %}
             <a
                 href="{{ url_for('transfer_ownership', paste_id=paste.id) }}"
                 onclick="transferOwnership(event, '{{ paste.id }}')"
