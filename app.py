@@ -42,7 +42,7 @@ csrf = CSRFProtect(app)
 app.config["UPLOAD_FOLDER"] = "static/profile_pics"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 db = SQLAlchemy(app)
-
+app.jinja_env.finalize = lambda x: x if x is not None else ""
 
 user_badges = db.Table(
     "user_badges",
@@ -807,7 +807,7 @@ def edit_profile() -> ResponseReturnValue:
             full_css = custom_css_input
         user.custom_css = full_css
 
-        bio_html = request.form.get("bio", "")
+        bio_html = request.form.get("bio", "").strip()
         user.bio = bio_html
 
         file = request.files.get("profile_picture")
