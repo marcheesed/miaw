@@ -452,10 +452,14 @@ def view_paste(paste_id):
 
     user_id = session.get("user_id")
     user = User.query.get(user_id)
-    if user:
-        log_ip(user.username, f"viewed paste {paste_id}")
-    else:
-        log_ip("guest", f"viewed paste {paste_id}")
+    visitor_username = None
+    if "user_id" in session:
+        current_user = User.query.get(session["user_id"])
+        if current_user:
+            visitor_username = current_user.username
+
+    log_ip(f"{visitor_username} viewed paste {paste_id}")
+
     safe_content = sanitize_content(paste.content)
 
     cookie_key = "viewed_paste"
