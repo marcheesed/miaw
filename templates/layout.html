@@ -37,6 +37,7 @@
                     <a href="{{ url_for('logout') }}">logout</a>
                     {% if paste is defined %} {% if request.endpoint ==
                     'view_paste' and current_user.id != paste.author_id %}
+                    <hr id="hr-2" />
                     <a href="{{ url_for('reclaim', paste_id=paste.id) }}"
                         >reclaim</a
                     >

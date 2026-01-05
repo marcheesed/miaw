@@ -269,6 +269,11 @@ input {
     color: var(--color-icon);
 }
 
+#hr-2 {
+    border-top: 1px solid var(--color-border);
+    margin: 10px 0;
+}
+
 .new-paste-options {
     display: flex;
     align-items: center;
