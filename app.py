@@ -870,7 +870,6 @@ def change_password():
 
 
 @app.route("/accept_terms", methods=["GET", "POST"])
-@login_required
 def accept_terms():
     if request.method == "POST":
         if g.current_user:
@@ -891,7 +890,7 @@ def delete_account():
         password_input = request.form.get("password", "").strip()
 
         if not check_password_hash(user.password_hash, password_input):
-            error = "incorrect password."
+            error = "Incorrect password."
             return render_template("user/delete_account.html", user=user, error=error)
 
         Paste.query.filter_by(user_id=user.id).delete()
@@ -1163,17 +1162,11 @@ def utility_processor():
     )
 
 
-def get_user_by_id(user_id):
-    return User.query.get(user_id)
-
-
 @app.before_request
-def load_current_user():
-    user_id = session.get("user_id")
-    if user_id:
-        g.current_user = get_user_by_id(user_id)
-    else:
-        g.current_user = None
+def load_user():
+    g.current_user = None
+    if "user_id" in session:
+        g.current_user = User.query.get(session["user_id"])
 
 
 @app.before_request
@@ -1185,9 +1178,10 @@ def check_privacy_policy():
                 return redirect(url_for("accept_terms"))
 
 
+@app.context_processor
 def inject_user():
-    user = getattr(g, "current_user", None)
-    return dict(current_user=user)
+    current_user = getattr(g, "current_user", None)
+    return dict(current_user=current_user)
 
 
 if __name__ == "__main__":
