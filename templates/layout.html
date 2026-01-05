@@ -23,7 +23,7 @@
                 </div>
                 <div class="dropdown-content" id="dropdownContent">
                     <a href="https://miaw.cc/info">info</a>
-                    <a href="{{ url_for('index') }}">create paste</a>
+                    <a href="{{ url_for('index') }}">create</a>
                     {% if current_user %}
                     <a
                         href="{{ url_for('profile', username=current_user.username) }}"
@@ -33,6 +33,7 @@
                     {% endif %} {% if current_user and current_user.is_admin %}
                     <a href="{{ url_for('admin_panel') }}">admin</a>
                     {% endif %} {% if current_user %}
+                    <a href="https://discord.gg/NHPTnyMq">discord</a>
                     <a href="{{ url_for('logout') }}">logout</a>
                     {% if paste is defined %} {% if request.endpoint ==
                     'view_paste' and current_user.id != paste.author_id %}
