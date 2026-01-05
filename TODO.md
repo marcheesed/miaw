@@ -28,5 +28,10 @@ x admin pastes
 x user ip logs
 x admin/users
 
-customizable meta content for pastes
-adding a favicon / changing title too
+x customizable meta content for pastes
+x adding a favicon / changing title too
+
+password locking of urls
+code editor
+url limit per day
+markdown (maybe)

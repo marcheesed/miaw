@@ -44,6 +44,11 @@ with app.app_context():
             "description": "contributed content or code",
             "icon_url": "/static/icons/contributor.svg",
         },
+        {
+            "name": "warn",
+            "description": "warned for something bad",
+            "icon_url": "/static/icons/warn.svg",
+        },
     ]
     for badge in badges:
         if not Badge.query.filter_by(name=badge["name"]).first():

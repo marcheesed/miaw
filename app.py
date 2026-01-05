@@ -17,6 +17,8 @@ from flask import (
     session,
     url_for,
 )
+from flask.typing import ResponseReturnValue
+from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from PIL import Image
@@ -648,7 +650,10 @@ def edit_paste(paste_id):
     paste = Paste.query.get(paste_id)
     if not paste:
         abort(404)
-    user = User.query.get(session["user_id"])
+
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
 
     if paste.user_id != user.id and not user.is_admin:
         abort(403)
@@ -684,7 +689,9 @@ def transfer_ownership(paste_id):
     if not paste:
         return "paste not found.", 404
 
-    current_user_obj = User.query.get(session["user_id"])
+    current_user_obj = User.query.get(session.get("user_id"))
+    if current_user_obj is None:
+        return redirect(url_for("login"))
 
     if paste.user_id != current_user_obj.id and not current_user_obj.is_admin:
         return "you don't have permission.", 403
@@ -699,10 +706,12 @@ def handle_transfer(paste_id):
     if not paste:
         return jsonify(success=False, error="paste not found!"), 404
 
-    current_user_obj = User.query.get(session["user_id"])
+    current_user_obj = User.query.get(session.get("user_id"))
+    if current_user_obj is None:
+        return jsonify(success=False, error="User not logged in."), 401
 
     if paste.user_id != current_user_obj.id and not current_user_obj.is_admin:
-        return jsonify(success=False, error="yoou dont have the perms for this"), 403
+        return jsonify(success=False, error="you don't have the perms for this"), 403
 
     new_owner_username = request.form.get("new_owner")
     new_owner = User.query.filter_by(username=new_owner_username).first()
@@ -729,9 +738,14 @@ def delete_paste(paste_id):
     paste = Paste.query.get(paste_id)
     if not paste:
         abort(404)
-    user = User.query.get(session["user_id"])
+
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
+
     if paste.user_id != user.id and not user.is_admin:
         abort(403)
+
     db.session.delete(paste)
     db.session.commit()
     return redirect(url_for("pastes"))
@@ -740,7 +754,10 @@ def delete_paste(paste_id):
 @app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
-    user = User.query.get(session["user_id"])
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
+
     if request.method == "POST":
         current_password = request.form.get("current_password", "").strip()
         new_password = request.form.get("new_password", "").strip()
@@ -748,11 +765,11 @@ def change_password():
 
         if not user.check_password(current_password):
             return jsonify(
-                {"success": False, "error": "Current password is incorrect."}
+                {"success": False, "error": "current password is incorrect."}
             )
 
         if new_password != confirm_password:
-            return jsonify({"success": False, "error": "New passwords do not match."})
+            return jsonify({"success": False, "error": "new passwords do not match."})
 
         user.set_password(new_password)
         db.session.commit()
@@ -768,8 +785,11 @@ def change_password():
 
 @app.route("/edit_profile", methods=["GET", "POST"])
 @login_required
-def edit_profile():
-    user = User.query.get(session["user_id"])
+def edit_profile() -> ResponseReturnValue:
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
+
     if request.method == "POST":
         custom_css_input = request.form.get("custom_css", "")
         custom_css_input = custom_css_input.strip()
@@ -802,6 +822,13 @@ def edit_profile():
                 webp_filepath = os.path.join(app.config["UPLOAD_FOLDER"], webp_filename)
                 img.save(webp_filepath, "WEBP")
                 os.remove(filepath)
+
+                old_pfp = user.profile_picture
+                if old_pfp and old_pfp != webp_filename:
+                    old_pfp_path = os.path.join(app.config["UPLOAD_FOLDER"], old_pfp)
+                    if os.path.exists(old_pfp_path):
+                        os.remove(old_pfp_path)
+
                 user.profile_picture = webp_filename
             except Exception as e:
                 print(f"Error converting image: {e}")
@@ -813,9 +840,9 @@ def edit_profile():
             if not existing_user:
                 user.username = new_username
             else:
-                return (
-                    "Username already exists. Please choose a different one.",
-                    "error",
+                error_message = "username already exists.. please choose a different one.ill make this nicer later."
+                return render_template(
+                    "user/edit_profile.html", user=user, error=error_message
                 )
 
         db.session.commit()
@@ -893,11 +920,15 @@ def report_post(paste_id):
     paste = Paste.query.get(paste_id)
     if paste is None:
         abort(404)
+    if not current_user.is_authenticated:
+        abort(401)
+
     if paste.user_id != current_user.id:
         abort(403)
+
     paste.user_id = None
     db.session.commit()
-    return redirect(url_for("dashboard", paste=paste))
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/<paste_id>/reclaim")
