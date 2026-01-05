@@ -95,11 +95,10 @@
                 >
             </div>
         </div>
+        <div style="display: flex; justify-content: space-between">
         <button class="btn" type="submit">save changes</button>
     </form>
-
-    <br />
-    <div style="display: flex; justify-content: space-between">
+<div style="display: flex; gap: 3px">
         <a href="{{ url_for('view_paste', paste_id=paste.id) }}"
             ><button class="btn">cancel</button></a
         >
@@ -113,6 +112,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button class="btn" type="submit">delete paste</button>
         </form>
+</div>
     </div>
 </div>
 <div
@@ -130,4 +130,5 @@
     <br />
     <button onclick="hidePopup()">Close</button>
 </div>
+
 {% endblock %}

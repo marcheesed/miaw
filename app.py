@@ -869,6 +869,48 @@ def dashboard():
     )
 
 
+@app.route("/<paste_id>/report")
+@login_required
+def report(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    return render_template("paste/report.html", paste=paste)
+
+
+@app.route("/<paste_id>/report", methods=["POST"])
+def report_post(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    if paste.user_id != current_user.id:
+        abort(403)
+    paste.user_id = None
+    db.session.commit()
+    return redirect(url_for("dashboard", paste=paste))
+
+
+@app.route("/<paste_id>/reclaim")
+@login_required
+def reclaim(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    return render_template("paste/reclaim.html", paste=paste)
+
+
+@app.route("/<paste_id>/reclaim", methods=["POST"])
+def reclaim_post(paste_id):
+    paste = Paste.query.get(paste_id)
+    if paste is None:
+        abort(404)
+    if paste.user_id != current_user.id:
+        abort(403)
+    paste.user_id = None
+    db.session.commit()
+    return redirect(url_for("dashboard", paste=paste))
+
+
 @app.context_processor
 def utility_processor():
     def is_ip_banned(ip):

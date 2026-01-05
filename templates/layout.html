@@ -34,7 +34,15 @@
                     <a href="{{ url_for('admin_panel') }}">admin</a>
                     {% endif %} {% if current_user %}
                     <a href="{{ url_for('logout') }}">logout</a>
-                    {% else %}
+                    {% if paste is defined %} {% if request.endpoint ==
+                    'view_paste' and current_user.id != paste.author_id %}
+                    <a href="{{ url_for('reclaim', paste_id=paste.id) }}"
+                        >reclaim</a
+                    >
+                    <a href="{{ url_for('report', paste_id=paste.id) }}"
+                        >report</a
+                    >
+                    {% endif %} {% endif %} {% else %}
                     <a href="{{ url_for('login') }}">login</a>
                     <a href="{{ url_for('register') }}">register</a>
                     {% endif %}

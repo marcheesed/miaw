@@ -1,0 +1,64 @@
+{% extends "layout.html" %} {% block content %}
+<div style="text-align: center" class="container-2">
+    <h1>you want to report {{ paste.id }}</h1>
+    <br />
+    <p>
+        this is the form for how to report a url, along with the rules and
+        guidelines for how to submit a report request.
+    </p>
+    <p>
+        please note that this information and our ticket system is off-site and
+        requires a <a href="https://shrimpcamp.com">shrimpcamp account</a> to
+        continue, and make sure to read the information provided carefully.
+    </p>
+
+    <p>
+        our
+        <a
+            href="https://stack.shrimpcamp.com/miaw/public-issues/wiki/p/266388773007261696"
+            >report guidelines</a
+        >
+        are here
+    </p>
+    <br />
+    <a href="">
+        <button onclick="report(event, '{{ paste.id }}')" class="btn">
+            report
+        </button></a
+    >
+</div>
+
+<div
+    id="popup"
+    style="
+        display: none;
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        padding: 20px;
+    "
+>
+    <span id="popup-message"></span>
+    <br /><br /><br />
+    <button class="btn" onclick="hidePopup()">close</button>
+</div>
+<script>
+    function showPopup(message) {
+        document.getElementById("popup-message").innerText = message;
+        document.getElementById("popup").style.display = "block";
+        document.getElementById("content").classList.add("blur");
+    }
+
+    function hidePopup() {
+        document.getElementById("popup").style.display = "none";
+        document.getElementById("content").classList.remove("blur");
+    }
+
+    function report(event, pasteId) {
+        event.preventDefault();
+        window.location.href = `https://stack.shrimpcamp.com/tickets/266376550826377216/new`;
+    }
+</script>
+{% endblock %}

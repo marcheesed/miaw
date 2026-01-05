@@ -108,4 +108,21 @@
         });
     }
 </script>
+<script>
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    const ownerUsername = getQueryParam("owner");
+
+    if (ownerUsername) {
+        setTimeout(() => {
+            const input = document.getElementById("new_owner");
+            if (input) {
+                input.value = ownerUsername;
+            }
+        }, 1000);
+    }
+</script>
 {% endblock %}
