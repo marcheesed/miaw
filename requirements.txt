@@ -4,3 +4,4 @@ flask_login
 flask_wtf
 pillow
 bleach
+tinycss2

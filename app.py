@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from functools import wraps
 
 import bleach
+from bleach.css_sanitizer import CSSSanitizer
 from flask import (
     Flask,
     abort,
@@ -148,12 +149,6 @@ with app.app_context():
 # -------- helpers ----------
 
 
-def sanitize_content(content):
-    return bleach.clean(
-        content, tags=allowed_tags, attributes=allowed_attributes, strip=True
-    )
-
-
 def sanitize_css(css):
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
     declarations = css.split(";")
@@ -181,11 +176,24 @@ def sanitize_css(css):
     return "; ".join(sanitized_declarations)
 
 
+css_sanitizer_instance = CSSSanitizer(allowed_css_properties=ALLOWED_CSS_PROPERTIES)
+
+
 def extract_css_declarations(css_block):
     match = re.search(r"\{([^}]*)\}", css_block, re.DOTALL)
     if match:
         return match.group(1)
     return css_block
+
+
+def sanitize_content(content):
+    return bleach.clean(
+        content,
+        tags=allowed_tags,
+        attributes=allowed_attributes,
+        css_sanitizer=css_sanitizer_instance,
+        strip=True,
+    )
 
 
 def is_ip_banned(ip):
