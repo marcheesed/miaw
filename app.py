@@ -423,11 +423,11 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             session["user_id"] = user.id
-            log_ip(username, "login")
+            log_ip("login")
             return redirect(url_for("index"))
         else:
             error = "invalid credentials."
-            log_ip(username, "failed login")
+            log_ip("failed login")
     return render_template("user/login.html", error=error)
 
 
