@@ -748,7 +748,7 @@ def delete_paste(paste_id):
 
     db.session.delete(paste)
     db.session.commit()
-    return redirect(url_for("pastes"))
+    return redirect(url_for("index"))
 
 
 @app.route("/change_password", methods=["GET", "POST"])
@@ -791,8 +791,7 @@ def edit_profile() -> ResponseReturnValue:
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        custom_css_input = request.form.get("custom_css", "")
-        custom_css_input = custom_css_input.strip()
+        custom_css_input = request.form.get("custom_css", "").strip()
         declarations = extract_css_declarations(custom_css_input)
         sanitized_declarations = sanitize_css(declarations)
         match = re.search(r"\{[^}]*\}", custom_css_input)
@@ -814,25 +813,22 @@ def edit_profile() -> ResponseReturnValue:
         file = request.files.get("profile_picture")
         if file and file.filename:
             filename = secure_filename(file.filename)
+            webp_filename = f"user_{user.id}.webp"
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            webp_filepath = os.path.join(app.config["UPLOAD_FOLDER"], webp_filename)
             file.save(filepath)
             try:
                 img = Image.open(filepath)
-                webp_filename = f"{os.path.splitext(filename)[0]}.webp"
-                webp_filepath = os.path.join(app.config["UPLOAD_FOLDER"], webp_filename)
                 img.save(webp_filepath, "WEBP")
                 os.remove(filepath)
-
                 old_pfp = user.profile_picture
                 if old_pfp and old_pfp != webp_filename:
                     old_pfp_path = os.path.join(app.config["UPLOAD_FOLDER"], old_pfp)
                     if os.path.exists(old_pfp_path):
                         os.remove(old_pfp_path)
-
                 user.profile_picture = webp_filename
-            except Exception as e:
-                print(f"Error converting image: {e}")
-                user.profile_picture = filename
+            except Exception:
+                user.profile_picture = webp_filename
 
         new_username = request.form.get("username", "").strip()
         if new_username and new_username != user.username:
