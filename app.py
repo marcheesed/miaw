@@ -884,21 +884,31 @@ def accept_terms():
 @app.route("/delete_account", methods=["GET", "POST"])
 @login_required
 def delete_account():
-    user = User.query.get(session.get("user_id"))
+    user_id = session.get("user_id")
+    user = User.query.get(user_id)
     if user is None:
         return redirect(url_for("login"))
 
     if request.method == "POST":
         password_input = request.form.get("password", "").strip()
-
         if not check_password_hash(user.password_hash, password_input):
-            error = "Incorrect password."
+            error = "incorrect password."
             return render_template("user/delete_account.html", user=user, error=error)
 
-        db.session.delete(user)
-        db.session.commit()
-        session.clear()
+        try:
+            for paste in user.pastes:
+                db.session.delete(paste)
+            db.session.flush()
+            db.session.delete(user)
 
+            db.session.commit()
+        except Exception as e:
+            print("Error during deletion:", e)
+            db.session.rollback()
+            error = "an error occurred. please try again later!"
+            return render_template("user/delete_account.html", user=user, error=error)
+
+        session.clear()
         return redirect(url_for("index"))
 
     return render_template("user/delete_account.html", user=user)

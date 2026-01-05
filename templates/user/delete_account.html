@@ -30,6 +30,8 @@
             "
             type="submit"
         >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
             yes, delete my account</button
         ><br /><br />
         <a href="{{ url_for('profile', username=user.username) }}">cancel</a>
