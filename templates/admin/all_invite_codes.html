@@ -23,11 +23,12 @@
                         <td>{{ 'yes' if code.used else 'no' }}</td>
                         <td>
                             {{ code.used_by_user.username if code.used_by_user
-                            else '' }}
+                            else 'deleted user' }}
                         </td>
                         <td>{{ code.used_at }}</td>
                         <td>
-                            {{ code.creator.username if code.creator else '' }}
+                            {{ code.creator.username if code.creator else
+                            'deleted user' }}
                         </td>
                         <td>
                             <form
