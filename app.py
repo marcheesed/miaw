@@ -22,6 +22,7 @@ from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from PIL import Image
+from sqlalchemy import CheckConstraint, or_
 from sqlalchemy.orm import joinedload
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -53,14 +54,19 @@ user_badges = db.Table(
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(30), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     profile_picture = db.Column(db.String(120), nullable=True)
-    bio = db.Column(db.Text, nullable=True)
+    bio = db.Column(db.String(500), nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
-    custom_css = db.Column(db.Text, nullable=True)
+    custom_css = db.Column(db.String(1000), nullable=True)
     badges = db.relationship("Badge", secondary=user_badges, backref="users")
     privacy_policy = db.Column(db.Integer, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("LENGTH(bio) <= 500", name="bio_length_check"),
+        CheckConstraint("LENGTH(custom_css) <= 1000", name="custom_css_length_check"),
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -224,14 +230,29 @@ def admin_required(f):
     return decorated_function
 
 
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template("errors/404.html"), 404
+@app.errorhandler(400)
+def request_failed(e):
+    return render_template("errors/400.html"), 400
+
+
+@app.errorhandler(401)
+def authorization_failed(e):
+    return render_template("errors/401.html"), 401
 
 
 @app.errorhandler(403)
 def access_denied(e):
     return render_template("errors/403.html"), 403
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("errors/404.html"), 404
+
+
+@app.errorhandler(500)
+def csrf_token(e):
+    return render_template("errors/500.html"), 500
 
 
 def get_form_value(key):
@@ -796,7 +817,12 @@ def dashboard():
     pastes_query = Paste.query.filter_by(user_id=user.id)
 
     if search_query:
-        pastes_query = pastes_query.filter(Paste.content.contains(search_query))
+        pastes_query = pastes_query.filter(
+            or_(
+                Paste.id.cast(db.String).contains(search_query),
+                Paste.content.contains(search_query),
+            )
+        )
 
     total = pastes_query.count()
     user_pastes = pastes_query.offset((page - 1) * per_page).limit(per_page).all()
@@ -851,6 +877,31 @@ def accept_terms():
             db.session.commit()
         return redirect(url_for("index"))
     return render_template("accept_terms.html")
+
+
+@app.route("/delete_account", methods=["GET", "POST"])
+@login_required
+def delete_account():
+    user = User.query.get(session.get("user_id"))
+    if user is None:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        password_input = request.form.get("password", "").strip()
+
+        if not check_password_hash(user.password_hash, password_input):
+            error = "Incorrect password."
+            return render_template("user/delete_account.html", user=user, error=error)
+
+        Paste.query.filter_by(user_id=user.id).delete()
+        db.session.delete(user)
+        db.session.commit()
+
+        session.clear()
+
+        return redirect(url_for("index"))
+
+    return render_template("user/delete_account.html", user=user)
 
 
 # ------- admin --------

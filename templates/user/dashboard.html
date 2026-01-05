@@ -10,12 +10,6 @@
         content="{{ url_for('static', filename='favicon.webp') }}"
     />
 </head>
-
-<!doctype html>
-<html>
-    <head>
-        <title>Your Dashboard</title>
-    </head>
     <body>
         <div class="container-2">
             <form
@@ -26,10 +20,10 @@
                 <input
                     type="text"
                     name="search"
-                    placeholder="Search..."
+                    placeholder="search..."
                     value="{{ search }}"
                 />
-                <button class="btn" type="submit">Search</button>
+                <button class="btn" type="submit">search</button>
                 <input
                     type="hidden"
                     name="csrf_token"
@@ -38,13 +32,15 @@
             </form>
 
             {% if pastes %} {% for paste in pastes %}
-            <div class="paste-card">
-                <a href="{{ url_for('view_paste', paste_id=paste.id) }}"
-                    >{{ url_for('view_paste', paste_id=paste.id) }}</a
+            <a class="paste-link" href="{{ url_for('view_paste', paste_id=paste.id) }}"
                 >
-            </div>
+            <div class="paste-card">
+                <h3>{{ url_for('view_paste', paste_id=paste.id) }}</h3>
+                <span>{{ paste.content[:105] }}{% if paste.content|length > 50 %}...{% endif %}</span>
+            </div></a
+            >
             {% endfor %} {% else %}
-            <div>No pastes yet.</div>
+            <div>no pastes yet!</div>
             {% endif %}
         </div>
         <div>

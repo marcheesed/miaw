@@ -107,11 +107,11 @@
             "
         >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <button class="btn" type="submit">delete paste</button>
+            <button class="btn btn-danger" type="submit">delete paste</button>
         </form>
 
         <a href="{{ url_for('view_paste', paste_id=paste.id) }}"
-            ><button class="btn">cancel</button></a
+            ><button class="btn ">cancel</button></a
         >
 </div>
     </div>

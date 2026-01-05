@@ -1,281 +1,262 @@
 {% extends 'layout.html' %} {% block content %}
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <title>User Management with Badges</title>
-        <style></style>
-    </head>
-    <body>
-        <form
-            method="GET"
-            action="{{ url_for('users') }}"
-            style="text-align: center; margin-bottom: 20px"
-        >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input
-                type="text"
-                name="search"
-                placeholder="Search by username..."
-                value="{{ request.args.get('search', '') }}"
-                style="padding: 8px; width: 200px"
-            />
-            <button class="btn" type="submit" style="padding: 8px 12px">
-                Search
-            </button>
-        </form>
 
-        <table
-            border="1"
-            cellpadding="8"
-            cellspacing="0"
-            style="width: 100%; margin-bottom: 20px"
-        >
-            <thead>
-                <tr>
-                    <th>username</th>
-                    <th>banned</th>
-                    <th>actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in users %}
-                <tr>
-                    <td>
-                        <a
-                            href="{{ url_for('profile', username=item.user.username) }}"
+    <form
+        method="GET"
+        action="{{ url_for('users') }}"
+        style="text-align: center; margin-bottom: 20px"
+    >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input
+            type="text"
+            name="search"
+            placeholder="search by username..."
+            value="{{ request.args.get('search', '') }}"
+            style="padding: 8px; width: 200px"
+        />
+        <button class="btn" type="submit" style="padding: 8px 12px">
+            search
+        </button>
+    </form>
+
+    <table
+        border="1"
+        cellpadding="8"
+        cellspacing="0"
+        style="width: 100%; margin-bottom: 20px; max-width: 800px;"
+    >
+        <thead>
+            <tr>
+                <th>username</th>
+                <th>banned</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in users %}
+            <tr>
+                <td>
+                    <a
+                        href="{{ url_for('profile', username=item.user.username) }}"
+                    >
+                        {{ item.user.username }}
+                    </a>
+                    {% if item.user.badges %}
+                    <div style="margin-top: 5px">
+                        {% for badge in item.user.badges %}
+                        <span
+                            style="
+                                display: inline-block;
+                            "
                         >
-                            {{ item.user.username }}
-                        </a>
-                        <!-- Badge display with removal buttons -->
-                        {% if item.user.badges %}
-                        <div style="margin-top: 5px">
-                            {% for badge in item.user.badges %}
-                            <span
+                            {{ badge.name }}
+                            <button
+                                type="button"
                                 style="
-                                    background-color: #eee;
-                                    padding: 2px 6px;
-                                    border-radius: 4px;
-                                    margin-right: 4px;
-                                    display: inline-block;
+                                    border: none;
+                                    background: none;
+                                    cursor: pointer;
+                                    margin-left: 4px;
                                 "
+                                onclick="removeBadge({{ item.user.id }}, '{{ badge.id }}')"
                             >
-                                {{ badge.name }}
-                                <button
-                                    type="button"
-                                    style="
-                                        border: none;
-                                        background: none;
-                                        cursor: pointer;
-                                        margin-left: 4px;
-                                    "
-                                    onclick="removeBadge({{ item.user.id }}, '{{ badge.id }}')"
-                                >
-                                    &times;
-                                </button>
-                            </span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <form
-                            method="POST"
-                            id="assign-form-{{ item.user.id }}"
-                            onsubmit="return false;"
+                                &times;
+                            </button>
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <form
+                        method="POST"
+                        id="assign-form-{{ item.user.id }}"
+                        onsubmit="return false;"
+                    >
+                        <div
+                            class="dropdown"
+                            style="
+                                margin-top: 10px;
+                                position: relative;
+                                display: inline-block;
+                            "
                         >
-                            <div
-                                class="dropdown"
-                                style="
-                                    margin-top: 10px;
-                                    position: relative;
-                                    display: inline-block;
-                                "
-                            >
-                                <input
-                                    type="hidden"
-                                    name="csrf_token"
-                                    value="{{ csrf_token() }}"
-                                />
-                                <button
-                                    type="button"
-                                    class="btn"
-                                    onclick="toggleDropdown({{ item.user.id }})"
-                                >
-                                    assign badge
-                                </button>
-                                <div
-                                    class="dropdown-content"
-                                    id="dropdown-content-{{ item.user.id }}"
-                                    style="
-                                        display: none;
-                                        position: absolute;
-                                        background: #fff;
-                                        min-width: 220px;
-                                        box-shadow: 0px 8px 16px
-                                            rgba(0, 0, 0, 0.2);
-                                        padding: 10px;
-                                        z-index: 1;
-                                    "
-                                >
-                                    {% for badge in badges %}
-                                    <div
-                                        style="padding: 8px; cursor: pointer"
-                                        onclick="selectBadge({{ item.user.id }}, '{{ badge.id }}')"
-                                    >
-                                        {{ badge.name }}
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
                             <input
                                 type="hidden"
-                                id="badge-input-{{ item.user.id }}"
-                                name="badge"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
                             />
-                        </form>
-                    </td>
-                    <td>{% if item.banned %} yes {% else %} nah {% endif %}</td>
-                    <td>
-                        <div style="display: flex; gap: 10px">
-                            {% if item.banned %}
-                            <form
-                                method="post"
-                                action="{{ url_for('unban_user', user_id=item.user.id) }}"
+                            <button
+                                type="button"
+                                class="btn"
+                                onclick="toggleDropdown({{ item.user.id }})"
                             >
-                                <button class="btn" type="submit">unban</button>
-                                <input
-                                    type="hidden"
-                                    name="csrf_token"
-                                    value="{{ csrf_token() }}"
-                                />
-                            </form>
-                            {% else %}
-                            <form
-                                method="post"
-                                action="{{ url_for('ban_user', user_id=item.user.id) }}"
-                            >
-                                <input
-                                    type="hidden"
-                                    name="csrf_token"
-                                    value="{{ csrf_token() }}"
-                                />
-                                <input
-                                    type="hidden"
-                                    name="reason"
-                                    value="Violation"
-                                />
-                                <button class="btn" type="submit">ban</button>
-                            </form>
-                            {% endif %}
-                            <form
-                                method="post"
-                                action="{{ url_for('ban_ip') }}"
-                            >
-                                <input
-                                    type="hidden"
-                                    name="csrf_token"
-                                    value="{{ csrf_token() }}"
-                                />
-                                <input
-                                    type="hidden"
-                                    name="ip_address"
-                                    value="{{ item.user.ip_address }}"
-                                />
-                                <button class="btn" type="submit">
-                                    ban ip
-                                </button>
-                            </form>
-                            <form
-                                method="post"
-                                action="{{ url_for('delete_user', user_id=item.user.id) }}"
-                                onsubmit="
-                                    return confirm(
-                                        'are you sure you want to delete this user?',
-                                    );
+                                assign badge
+                            </button>
+                            <div
+                                class="dropdown-content"
+                                id="dropdown-content-{{ item.user.id }}"
+                                style="
+                                    display: none;
+                                    position: absolute;
+                                    min-width: 220px;
+                                    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+                                    padding: 10px;
+                                    z-index: 1000;
                                 "
                             >
-                                <input
-                                    type="hidden"
-                                    name="csrf_token"
-                                    value="{{ csrf_token() }}"
-                                />
-                                <button class="btn" type="submit">
-                                    delete
-                                </button>
-                            </form>
+                                {% for badge in badges %}
+                                <div
+                                    style="padding: 8px; cursor: pointer"
+                                    onclick="selectBadge({{ item.user.id }}, '{{ badge.id }}')"
+                                >
+                                    {{ badge.name }}
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        <input
+                            type="hidden"
+                            id="badge-input-{{ item.user.id }}"
+                            name="badge"
+                        />
+                    </form>
+                </td>
+                <td>{% if item.banned %} yes {% else %} nah {% endif %}</td>
+                <td>
+                    <div style="display: flex; gap: 10px">
+                        {% if item.banned %}
+                        <form
+                            method="post"
+                            action="{{ url_for('unban_user', user_id=item.user.id) }}"
+                        >
+                            <button class="btn" type="submit">unban</button>
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            />
+                        </form>
+                        {% else %}
+                        <form
+                            method="post"
+                            action="{{ url_for('ban_user', user_id=item.user.id) }}"
+                        >
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            />
+                            <input
+                                type="hidden"
+                                name="reason"
+                                value="Violation"
+                            />
+                            <button class="btn btn-danger" type="submit">
+                                ban
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form method="post" action="{{ url_for('ban_ip') }}">
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            />
+                            <input
+                                type="hidden"
+                                name="ip_address"
+                                value="{{ item.user.ip_address }}"
+                            />
+                            <button class="btn btn-danger" type="submit">
+                                ban ip
+                            </button>
+                        </form>
+                        <form
+                            method="post"
+                            action="{{ url_for('delete_user', user_id=item.user.id) }}"
+                            onsubmit="
+                                return confirm(
+                                    'are you sure you want to delete this user?',
+                                );
+                            "
+                        >
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            />
+                            <button class="btn btn-danger" type="submit">
+                                delete
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-        <div class="pagination" style="text-align: center">
-            {% if page > 1 %}
-            <a href="{{ url_for('users', page=page-1) }}">Previous</a>
-            {% else %}
-            <a class="disabled">Previous</a>
-            {% endif %}
-            <span>Page {{ page }} of {{ total_pages }}</span>
-            {% if page < total_pages %}
-            <a href="{{ url_for('users', page=page+1) }}">Next</a>
-            {% else %}
-            <a class="disabled">Next</a>
-            {% endif %}
-        </div>
+    <div class="pagination" style="text-align: center">
+        {% if page > 1 %}
+        <a href="{{ url_for('users', page=page-1) }}">Previous</a>
+        {% else %}
+        <a class="disabled">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+        <a href="{{ url_for('users', page=page+1) }}">Next</a>
+        {% else %}
+        <a class="disabled">Next</a>
+        {% endif %}
+    </div>
 
-        <script>
-            function toggleDropdown(userId) {
-                const menu = document.getElementById(
-                    "dropdown-content-" + userId,
-                );
-                menu.style.display =
-                    menu.style.display === "block" ? "none" : "block";
-            }
+    <script>
+        function toggleDropdown(userId) {
+            const menu = document.getElementById("dropdown-content-" + userId);
+            menu.style.display =
+                menu.style.display === "block" ? "none" : "block";
+        }
 
-            function selectBadge(userId, badgeId) {
-                document.getElementById("badge-input-" + userId).value =
-                    badgeId;
-                submitAssignBadge(userId);
-                document.getElementById(
-                    "dropdown-content-" + userId,
-                ).style.display = "none";
-            }
+        function selectBadge(userId, badgeId) {
+            document.getElementById("badge-input-" + userId).value = badgeId;
+            submitAssignBadge(userId);
+            document.getElementById(
+                "dropdown-content-" + userId,
+            ).style.display = "none";
+        }
 
-            function submitAssignBadge(userId) {
-                const form = document.getElementById("assign-form-" + userId);
-                const badgeId = document.getElementById(
-                    "badge-input-" + userId,
-                ).value;
-                const urlTemplate =
-                    '{{ url_for("assign_badge", user_id=0, badge_id=0) }}';
-                const url = urlTemplate
+        function submitAssignBadge(userId) {
+            const form = document.getElementById("assign-form-" + userId);
+            const badgeId = document.getElementById(
+                "badge-input-" + userId,
+            ).value;
+            const urlTemplate =
+                '{{ url_for("assign_badge", user_id=0, badge_id=0) }}';
+            const url = urlTemplate
+                .replace("/0/", "/" + userId + "/")
+                .replace("/0", "/" + badgeId);
+            form.action = url;
+            form.submit();
+        }
+
+        function removeBadge(userId, badgeId) {
+            fetch(
+                `{{ url_for('remove_badge', user_id=0, badge_id=0) }}`
                     .replace("/0/", "/" + userId + "/")
-                    .replace("/0", "/" + badgeId);
-                form.action = url;
-                form.submit();
-            }
-
-            function removeBadge(userId, badgeId) {
-                fetch(
-                    `{{ url_for('remove_badge', user_id=0, badge_id=0) }}`
-                        .replace("/0/", "/" + userId + "/")
-                        .replace("/0", "/" + badgeId),
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            "X-CSRFToken": "{{ csrf_token() }}",
-                        },
+                    .replace("/0", "/" + badgeId),
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": "{{ csrf_token() }}",
                     },
-                ).then((response) => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert("Failed to remove badge.");
-                    }
-                });
-            }
-        </script>
-    </body>
-</html>
-{% endblock %}
+                },
+            ).then((response) => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("Failed to remove badge.");
+                }
+            });
+        }
+    </script>
+    {% endblock %}
+</div>

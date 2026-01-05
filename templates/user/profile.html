@@ -28,40 +28,50 @@
     <body>
         <div class="container-2">
             <div id="profile-flex">
-                {% if user.profile_picture %}
-                <img
-                    src="{{ url_for('static', filename='profile_pics/' + user.profile_picture) }}"
-                    alt="{{ user.username }}'s profile picture"
-                    id="pfp"
-                />
-                {% else %}
-                <img
-                    src="{{ url_for('static', filename='profile_pics/default_pfp.png') }}"
-                    alt="{{ user.username }}'s profile picture"
-                    id="pfp"
-                />
-                {% endif %}
+                <div
+                    style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                        margin-bottom: -30px;
+                    "
+                >
+                    {% if user.profile_picture %}
+                    <img
+                        src="{{ url_for('static', filename='profile_pics/' + user.profile_picture) }}"
+                        alt="{{ user.username }}'s profile picture"
+                        id="pfp"
+                    />
+                    {% else %}
+                    <img
+                        src="{{ url_for('static', filename='default_pfp.webp') }}"
+                        alt="{{ user.username }}'s profile picture"
+                        id="pfp"
+                    />
+                    {% endif %}
+                    <div class="badges-container">
+                        {% for badge in user.badges %}
+                        <div class="badge-containment">
+                            {% if badge.icon_url %}
+                            <img
+                                src="{{ badge.icon_url }}"
+                                alt="{{ badge.name }}"
+                                width="24"
+                                height="24"
+                            />
+                            {% endif %}
+                        </div>
 
+                        {% endfor %}
+                    </div>
+                </div>
+                <br />
                 <div id="profile-flex-two">
                     <div style="display: flex; align-items: center; gap: 15px">
                         <h2 id="name">
                             {% if current_user.username == user.username %} your
                             {% else %} {{ user.username }}'s {% endif %} profile
                         </h2>
-                        <div class="badges-container">
-                            {% for badge in user.badges %}
-                            <div class="badge-containment">
-                                {% if badge.icon_url %}
-                                <img
-                                    src="{{ badge.icon_url }}"
-                                    alt="{{ badge.name }}"
-                                    width="24"
-                                    height="24"
-                                />
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
                     </div>
                     <div class="bio">
                         {% if user.bio %}{{ sanitize_content(user.bio) | safe }}

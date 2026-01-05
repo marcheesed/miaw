@@ -14,7 +14,7 @@
                 />
                 {% else %}
                 <img
-                    src="{{ url_for('static', filename='profile_pics/default_pfp.png') }}"
+                    src="{{ url_for('static', filename='default_pfp.webp') }}"
                     alt="Profile Picture"
                     id="pfp"
                 />
@@ -51,11 +51,6 @@
                 cols="30"
                 placeholder="enter your custom CSS here..."
             >{{ user.custom_css }}</textarea><br /><br />
-
-
-
-
-
             <input
                 type="hidden"
                 name="csrf_token"
@@ -67,10 +62,14 @@
         <a href="{{ url_for('profile', username=user.username) }}"
             ><button class="btn">back to profile</button></a
         >
-
+<div>
+    <a href="{{ url_for('delete_account', username=user.username) }}"
+        ><button class="btn btn-danger">delete account</button></a
+    >
         <a href="{{ url_for('change_password', username=user.username) }}"
-            ><button class="btn">change password</button></a
+            ><button class="btn btn-danger">change password</button></a
         >
+</div>
             {% endblock %}
         </div>
         </div>

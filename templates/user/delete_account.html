@@ -1,0 +1,38 @@
+{% extends "layout.html" %} {% block content %}
+<div style="text-align: center" class="container-2">
+    <h1>so you wanna delete your account</h1>
+    {% if error %}
+    <p>{{ error }}</p>
+    {% endif %}
+    <br />
+    <p>
+        <b
+            >once your account is deleted, all your data will be permanently
+            lost. we cannot recover pastes or profile information.</b
+        >
+    </p>
+    <p>so are you REALLY sure? click below if yes.</p>
+    <form method="POST">
+        <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="confirm your password"
+        />
+        <br /><br />
+        <button
+            class="btn btn-danger"
+            onclick="
+                return confirm(
+                    'are you REALLY SURE you want to delete your account?',
+                );
+            "
+            type="submit"
+        >
+            yes, delete my account</button
+        ><br /><br />
+        <a href="{{ url_for('profile', username=user.username) }}">cancel</a>
+    </form>
+</div>
+{% endblock %}

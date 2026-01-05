@@ -13,13 +13,14 @@
         rel="icon"
         href="{{ paste.favicon_url or url_for('static', filename='favicon.ico') }}"
     />
-    {% endif %}
-    {% if paste.meta_image %}
+    {% endif %} {% if paste.meta_image %}
     <meta property="og:image" content="{{ paste.meta_image }}" />
     {% else %}
-    <meta property="og:image" content="{{ url_for('static', filename='favicon.webp') }}" />
-    {% endif %}
-    {% if paste.theme_color %}
+    <meta
+        property="og:image"
+        content="{{ url_for('static', filename='favicon.webp') }}"
+    />
+    {% endif %} {% if paste.theme_color %}
     <meta name="theme-color" content="{{ paste.theme_color }}" />
     {% endif %}
     <title>
@@ -35,36 +36,43 @@
 
         <div style="display: flex; justify-content: space-between">
             <div>
-            <a href="#" onclick="editPaste(event, '{{ paste.id }}')"
-                ><button class="btn">edit</button></a
-            >
-            {% if current_user.id == paste.user_id or current_user.is_admin %}
-            <a
-                href="{{ url_for('paste_extras', paste_id=paste.id) }}"
-                onclick="transferOwnership(event, '{{ paste.id }}')"
-                ><button class="btn">extras</button></a
-            >
-            {% endif %}
-</div>
+                <a href="#" onclick="editPaste(event, '{{ paste.id }}')"
+                    ><button class="btn">edit</button></a
+                >
+                {% if current_user.id == paste.user_id or current_user.is_admin
+                %}
+                <a
+                    href="{{ url_for('paste_extras', paste_id=paste.id) }}"
+                    onclick="transferOwnership(event, '{{ paste.id }}')"
+                    ><button class="btn">extras</button></a
+                >
+                {% endif %}
+            </div>
             <div class="paste-stats">
-                <p>
+                <p id="published-at">
                     {% if published_at %} published on: {{
                     published_at.strftime("%Y-%m-%d %H:%M") }} UTC {% else %}
                     none tf {% endif %}
                 </p>
                 {% if last_edited_at %}
-                <p>
+                <p id="last-edited">
                     last edited: {{ last_edited_at.strftime("%Y-%m-%d %H:%M") }}
                     UTC
                 </p>
                 {% else %}
-                <p>
+                <p id="last-edited">
                     last edited: {{ published_at.strftime("%Y-%m-%d %H:%M") }}
                     UTC
                 </p>
                 {% endif %}
-                <p>owner: <a href="{{ url_for('profile', username=paste.user.username) }}">{{ paste.user.username }}</a></p>
-                <p>views: {{ paste.views }}</p>
+                <p id="paste-owner">
+                    owner:
+                    <a
+                        href="{{ url_for('profile', username=paste.user.username) }}"
+                        >{{ paste.user.username }}</a
+                    >
+                </p>
+                <p id="paste-views">views: {{ paste.views }}</p>
             </div>
         </div>
     </div>
@@ -82,7 +90,7 @@
         padding: 20px;
     "
 >
-    <spanid="popup-message"></span>
+    <span id="popup-message"></span>
     <br /><br /><br />
     <button class="btn" onclick="hidePopup()">close</button>
 </div>
