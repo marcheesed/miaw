@@ -103,7 +103,7 @@
         const loggedIn = {{ 'true' if logged_in else 'false' }};
 
         if (loggedIn) {
-            window.location.href = `/${pasteId}/edit`;
+            window.location.href = `/edit/${pasteId}`;
         } else {
             showPopup("ah ah ah you gotta log in");
         }
