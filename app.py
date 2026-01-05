@@ -406,7 +406,12 @@ def view_paste(paste_id):
         if not session.get(f"paste_{paste_id}_unlocked"):
             return redirect(url_for("view_protected_paste", paste_id=paste_id))
 
-    user = User.query.get(session.get("user_id"))
+    user_id = session.get("user_id")
+    user = User.query.get(user_id)
+    if user:
+        log_ip(user.username, f"viewed paste {paste_id}")
+    else:
+        log_ip("guest", f"viewed paste {paste_id}")
     safe_content = sanitize_content(paste.content)
 
     cookie_key = "viewed_paste"
@@ -781,6 +786,7 @@ def edit_profile() -> ResponseReturnValue:
 @app.route("/profile/<username>", methods=["GET", "POST"])
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
+    log_ip(username, f"viewed profile of {user.username}")
 
     is_owner = session.get("user_id") == user.id
 
