@@ -230,9 +230,17 @@ def get_client_ip():
     return ip
 
 
-def log_ip(username, action):
+def log_ip(action):
+    user_id = session.get("user_id")
+    if not user_id:
+        return
+
+    user = User.query.get(user_id)
+    if not user:
+        return
+
     ip = get_client_ip()
-    ip_log = IPLog(username=username, ip_address=ip, action=action)
+    ip_log = IPLog(username=user.username, ip_address=ip, action=action)
     db.session.add(ip_log)
     db.session.commit()
 
@@ -822,7 +830,14 @@ def edit_profile() -> ResponseReturnValue:
 @app.route("/profile/<username>", methods=["GET", "POST"])
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
-    log_ip(username, f"viewed profile of {user.username}")
+
+    visitor_username = None
+    if "user_id" in session:
+        current_user = User.query.get(session["user_id"])
+        if current_user:
+            visitor_username = current_user.username
+
+    log_ip(f"{visitor_username} viewed profile of {user.username}")
 
     is_owner = session.get("user_id") == user.id
 
@@ -843,7 +858,14 @@ def profile(username):
         db.session.commit()
         return redirect(url_for("profile", username=user.username))
 
-    return render_template("user/profile.html", user=user, is_owner=is_owner)
+    # Pass data to template for display
+    return render_template(
+        "user/profile.html",
+        user=user,
+        is_owner=is_owner,
+        visitor_username=visitor_username,
+        profile_owner_username=user.username,
+    )
 
 
 @app.route("/dashboard")
