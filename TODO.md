@@ -31,7 +31,8 @@ x admin/users
 x customizable meta content for pastes
 x adding a favicon / changing title too
 
-password locking of urls
+x password locking of urls
 code editor
 url limit per day
 markdown (maybe)
+users being able to delete their accounts (duh)

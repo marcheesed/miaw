@@ -1,11 +1,6 @@
-Flask
-Flask-SQLAlchemy
-datetime
-bleach
-flask.typing
+flask
+flask-sqlalchemy
 flask_login
-flask_wtf import CSRFProtect
-PIL
-sqlalchemy.orm
-werkzeug.security
-werkzeug.utils
+flask_wtf
+pillow
+bleach
