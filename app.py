@@ -1163,11 +1163,17 @@ def utility_processor():
     )
 
 
+def get_user_by_id(user_id):
+    return User.query.get(user_id)
+
+
 @app.before_request
-def load_user():
-    g.current_user = None
-    if "user_id" in session:
-        g.current_user = User.query.get(session["user_id"])
+def load_current_user():
+    user_id = session.get("user_id")
+    if user_id:
+        g.current_user = get_user_by_id(user_id)
+    else:
+        g.current_user = None
 
 
 @app.before_request
