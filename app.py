@@ -812,26 +812,34 @@ def edit_profile() -> ResponseReturnValue:
 
         file = request.files.get("profile_picture")
         if file and file.filename:
+            print("Received profile picture upload.")
             filename = secure_filename(file.filename)
             webp_filename = f"user_{user.id}.webp"
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             webp_filepath = os.path.join(app.config["UPLOAD_FOLDER"], webp_filename)
+            print(f"Saving uploaded file to: {filepath}")
             file.save(filepath)
             try:
+                print("Opening image for conversion.")
                 img = Image.open(filepath)
+                print(f"Saving WebP image to: {webp_filepath}")
                 img.save(webp_filepath, "WEBP")
                 os.remove(filepath)
+                print("Conversion successful, removing temp file.")
                 old_pfp = user.profile_picture
                 if old_pfp and old_pfp != webp_filename:
                     old_pfp_path = os.path.join(app.config["UPLOAD_FOLDER"], old_pfp)
                     if os.path.exists(old_pfp_path):
+                        print(f"Removing old profile picture: {old_pfp_path}")
                         os.remove(old_pfp_path)
                 user.profile_picture = webp_filename
-            except Exception:
+            except Exception as e:
+                print(f"Error converting image: {e}")
                 user.profile_picture = webp_filename
 
         new_username = request.form.get("username", "").strip()
         if new_username and new_username != user.username:
+            print(f"Attempting to change username to: {new_username}")
             existing_user = User.query.filter_by(username=new_username).first()
             if not existing_user:
                 user.username = new_username
@@ -841,8 +849,11 @@ def edit_profile() -> ResponseReturnValue:
                     "user/edit_profile.html", user=user, error=error_message
                 )
 
+        print("Committing changes to database.")
         db.session.commit()
+        print("Redirecting to profile page.")
         return redirect(url_for("profile", username=user.username))
+    print("Rendering edit profile page.")
     return render_template("user/edit_profile.html", user=user)
 
 
