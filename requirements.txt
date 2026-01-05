@@ -1,2 +1,6 @@
 Flask
 Flask-SQLAlchemy
+flask_login
+flask_wtf
+pillow
+bleach
