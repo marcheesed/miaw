@@ -62,6 +62,9 @@ class User(db.Model):
     custom_css = db.Column(db.String(1000), nullable=True)
     badges = db.relationship("Badge", secondary=user_badges, backref="users")
     privacy_policy = db.Column(db.Integer, nullable=False)
+    pastes = db.relationship(
+        "Paste", backref="user", cascade="all, delete", passive_deletes=True
+    )
 
     __table_args__ = (
         CheckConstraint("LENGTH(bio) <= 500", name="bio_length_check"),
@@ -76,9 +79,9 @@ class User(db.Model):
 
 
 class Paste(db.Model):
-    id = db.Column(db.String(8), primary_key=True)
-    content = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    id = db.Column(db.String(30), primary_key=True)
+    content = db.Column(db.String(5000), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
     user = db.relationship("User", backref="pastes")
     last_edited_at = db.Column(db.DateTime, nullable=True)
     published_at = db.Column(db.DateTime, nullable=True)
@@ -93,7 +96,7 @@ class Paste(db.Model):
 
 class IPLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80))
+    username = db.Column(db.String(30))
     ip_address = db.Column(db.String(45))
     action = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, default=db.func.now())
@@ -892,8 +895,6 @@ def delete_account():
         if not check_password_hash(user.password_hash, password_input):
             error = "Incorrect password."
             return render_template("user/delete_account.html", user=user, error=error)
-
-        Paste.query.filter_by(user_id=user.id).delete()
 
         db.session.delete(user)
         db.session.commit()
