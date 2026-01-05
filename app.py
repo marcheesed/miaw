@@ -894,9 +894,9 @@ def delete_account():
             return render_template("user/delete_account.html", user=user, error=error)
 
         Paste.query.filter_by(user_id=user.id).delete()
+
         db.session.delete(user)
         db.session.commit()
-
         session.clear()
 
         return redirect(url_for("index"))
