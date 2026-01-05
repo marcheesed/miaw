@@ -82,7 +82,6 @@ class Paste(db.Model):
     id = db.Column(db.String(30), primary_key=True)
     content = db.Column(db.String(5000), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
-    user = db.relationship("User", backref="pastes")
     last_edited_at = db.Column(db.DateTime, nullable=True)
     published_at = db.Column(db.DateTime, nullable=True)
     views = db.Column(db.Integer, default=0)
