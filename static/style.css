@@ -352,6 +352,12 @@ h5 {
     display: flex;
 }
 
+.user-table {
+    width: 100%;
+    margin-bottom: 20px;
+    max-width: 800px;
+}
+
 @media (max-width: 568px) {
     #profile-flex {
         flex-direction: column;
@@ -365,6 +371,25 @@ h5 {
     .badges-container {
         margin-bottom: 20px;
     }
+
+    #flex-user-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .user-table {
+        width: 100%;
+        max-width: 300px;
+        display: block;
+        overflow-x: auto;
+        overflow-y: auto;
+    }
+}
+
+#flex-user-actions {
+    display: flex;
+    gap: 10px;
 }
 
 .paste-card {

@@ -38,5 +38,5 @@ markdown (maybe)
 x users being able to delete their accounts (duh)
 
 bugs:
-dashboard fix
+x dashboard fix
 css sanitization needs to happen
