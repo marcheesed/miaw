@@ -26,8 +26,26 @@
         >
 {{ paste.content }}</textarea
         >
-        <div class="meta">
-            <div class="meta-content">
+        <div
+            class="meta"
+            style="
+                display: flex;
+                gap: 10px;
+                padding: 8px;
+                width: 100%;
+                justify-content: space-between;
+            "
+        >
+            <div
+                class="meta-content"
+                style="
+                    width: 100%;
+                    max-width: 400px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                "
+            >
                 <input
                     type="text"
                     id="page_title"
@@ -50,7 +68,16 @@
                     placeholder="meta desc theme color here!"
                 />
             </div>
-            <div class="meta-content">
+            <div
+                class="meta-content"
+                style="
+                    width: 100%;
+                    max-width: 400px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                "
+            >
                 <input
                     type="text"
                     id="favicon_url"
