@@ -870,6 +870,7 @@ def change_password():
 
 
 @app.route("/accept_terms", methods=["GET", "POST"])
+@login_required
 def accept_terms():
     if request.method == "POST":
         if g.current_user:
@@ -890,7 +891,7 @@ def delete_account():
         password_input = request.form.get("password", "").strip()
 
         if not check_password_hash(user.password_hash, password_input):
-            error = "Incorrect password."
+            error = "incorrect password."
             return render_template("user/delete_account.html", user=user, error=error)
 
         Paste.query.filter_by(user_id=user.id).delete()

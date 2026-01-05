@@ -277,8 +277,10 @@ input {
 }
 
 #pfp {
-    width: 700px;
-    height: 700px;
+    height: auto;
+    width: 100%;
+    max-width: 700px;
+    max-height: 700px;
     border-radius: 8px;
     object-fit: cover;
     border: 1px solid var(--color-border);
