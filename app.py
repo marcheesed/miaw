@@ -1178,9 +1178,9 @@ def check_privacy_policy():
                 return redirect(url_for("accept_terms"))
 
 
-@app.context_processor
 def inject_user():
-    return dict(current_user=g.current_user)
+    user = getattr(g, "current_user", None)
+    return dict(current_user=user)
 
 
 if __name__ == "__main__":
