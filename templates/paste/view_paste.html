@@ -60,7 +60,7 @@
                     UTC
                 </p>
                 {% endif %}
-                <p>owner: {{ paste.user.username }}</p>
+                <p>owner: <a href="{{ url_for('user_profile', username=paste.user.username) }}">{{ paste.user.username }}</a></p>
                 <p>views: {{ paste.views }}</p>
             </div>
         </div>
