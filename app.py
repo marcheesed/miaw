@@ -632,7 +632,7 @@ def delete_invite_code(code_id):
     return redirect(url_for("all_invite_codes"))
 
 
-@app.route("/<paste_id>/edit", methods=["GET", "POST"])
+@app.route("/edit/<paste_id>", methods=["GET", "POST"])
 @login_required
 def edit_paste(paste_id):
     paste = Paste.query.get(paste_id)
@@ -667,7 +667,7 @@ def edit_paste(paste_id):
     return render_template("paste/edit_paste.html", paste=paste)
 
 
-@app.route("/<paste_id>/transfer", methods=["GET"])
+@app.route("/transfer/<paste_id>", methods=["GET"])
 @login_required
 def transfer_ownership(paste_id):
     paste = Paste.query.get(paste_id)
@@ -682,7 +682,7 @@ def transfer_ownership(paste_id):
     return render_template("paste/transfer_paste.html", paste=paste)
 
 
-@app.route("/<paste_id>/transfer", methods=["POST"])
+@app.route("/transfer/<paste_id>", methods=["POST"])
 @login_required
 def handle_transfer(paste_id):
     paste = Paste.query.get(paste_id)
