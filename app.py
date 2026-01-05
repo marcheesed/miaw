@@ -858,7 +858,6 @@ def profile(username):
         db.session.commit()
         return redirect(url_for("profile", username=user.username))
 
-    # Pass data to template for display
     return render_template(
         "user/profile.html",
         user=user,
