@@ -1,0 +1,111 @@
+{% extends "layout.html" %} {% block content %} {% if current_user or
+(current_user and (current_user.id == paste.user_id or current_user.is_admin))
+%}
+<div style="text-align: center" class="container-2">
+    <h1>transfer ownership of {{ paste.id }}?</h1>
+    <br />
+    <p>
+        below is the box to transfer this paste to another user!
+        <b
+            >this cannot be undone, unless by an admin. be sure of your decision
+            before making it.</b
+        >
+    </p>
+    <br />
+    <form
+        method="POST"
+        action="{{ url_for('transfer_ownership', paste_id=paste.id) }}"
+        id="transferOwnershipForm"
+        placeholder="username here!"
+        style="
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        "
+    >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input
+            type="text"
+            id="new_owner"
+            name="new_owner"
+            placeholder="username"
+        />
+        <button class="btn" type="submit">transfer ownership</button>
+    </form>
+    <br />
+    <a href="{{ url_for('view_paste', paste_id=paste.id) }}"
+        ><button class="btn">cancel</button></a
+    >
+</div>
+{% endif %}
+<div
+    id="popup"
+    style="
+        display: none;
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+    "
+>
+    <span id="popup-message"></span>
+    <br />
+    <button class="btn" onclick="hidePopup()">Close</button>
+</div>
+<script>
+    const pasteUrl = "{{ url_for('view_paste', paste_id=paste.id) }}";
+
+    function showPopup(message) {
+        document.getElementById("popup-message").innerText = message;
+        document.getElementById("popup").style.display = "block";
+    }
+
+    function hidePopup() {
+        document.getElementById("popup").style.display = "none";
+    }
+
+    const transferForm = document.getElementById("transferOwnershipForm");
+    if (transferForm) {
+        transferForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            fetch(this.action, {
+                method: "POST",
+                body: new FormData(this),
+            })
+                .then((response) => response.text())
+                .then((text) => {
+                    console.log("server response:", text);
+
+                    try {
+                        const data = JSON.parse(text);
+
+                        if (data.success) {
+                            showPopup(
+                                "ownership transferred successfully! you'll be redirected momentarily.",
+                            );
+                            setTimeout(() => {
+                                location.href = pasteUrl;
+                            }, 2000);
+                        } else {
+                            showPopup(data.error);
+                        }
+                    } catch (e) {
+                        showPopup(
+                            "invalid server response. please contact the site owner.",
+                        );
+                        console.error("json parse error:", e);
+                    }
+                })
+                .catch((error) => {
+                    showPopup(
+                        "an error occurred while communicating with the server. please try again in a bit!",
+                    );
+                    console.error("fetch error:", error);
+                });
+        });
+    }
+</script>
+{% endblock %}

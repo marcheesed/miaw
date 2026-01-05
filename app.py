@@ -75,6 +75,11 @@ class Paste(db.Model):
     last_edited_at = db.Column(db.DateTime, nullable=True)
     published_at = db.Column(db.DateTime, nullable=True)
     views = db.Column(db.Integer, default=0)
+    meta_description = db.Column(db.String(255), nullable=True)
+    meta_image = db.Column(db.String(255), nullable=True)
+    theme_color = db.Column(db.String(7), nullable=True)
+    page_title = db.Column(db.String(255), nullable=True)
+    favicon_url = db.Column(db.String(255), nullable=True)
 
 
 class IPLog(db.Model):
@@ -387,7 +392,7 @@ def pastes():
     page = int(request.args.get("page", 1))
     per_page = 10
 
-    query = Paste.query.order_by(Paste.id)
+    query = Paste.query.order_by(Paste.published_at.desc())
 
     if search_query:
         query = query.filter(Paste.content.ilike(f"%{search_query}%"))
@@ -517,7 +522,7 @@ def view_paste(paste_id):
 
     response = make_response(
         render_template(
-            "view_paste.html",
+            "paste/view_paste.html",
             paste=paste,
             current_user=user,
             safe_content=safe_content,
@@ -640,7 +645,6 @@ def edit_paste(paste_id):
 
     if request.method == "POST":
         raw_content = request.form.get("content")
-        print("Received content:", raw_content)
         if raw_content is None:
             abort(400)
 
@@ -650,34 +654,63 @@ def edit_paste(paste_id):
 
         paste.content = sanitized_content
         paste.last_edited_at = datetime.now(timezone.utc)
+
+        paste.meta_description = request.form.get("meta_description")
+        paste.meta_image = request.form.get("meta_image")
+        paste.theme_color = request.form.get("theme_color")
+        paste.page_title = request.form.get("page_title")
+        paste.favicon_url = request.form.get("favicon_url")
+
         db.session.commit()
         return redirect(url_for("view_paste", paste_id=paste_id))
 
-    return render_template("edit_paste.html", paste=paste)
+    return render_template("paste/edit_paste.html", paste=paste)
 
 
-@app.route("/<paste_id>/transfer", methods=["POST"])
+@app.route("/<paste_id>/transfer", methods=["GET"])
 @login_required
 def transfer_ownership(paste_id):
     paste = Paste.query.get(paste_id)
     if not paste:
-        return jsonify({"success": False, "error": "Paste not found."}), 404
+        return "paste not found.", 404
 
     current_user_obj = User.query.get(session["user_id"])
 
     if paste.user_id != current_user_obj.id and not current_user_obj.is_admin:
-        return jsonify({"success": False, "error": "You don't have permission."}), 403
+        return "you don't have permission.", 403
 
-    new_owner_username = request.form["new_owner"].strip()
+    return render_template("paste/transfer_paste.html", paste=paste)
+
+
+@app.route("/<paste_id>/transfer", methods=["POST"])
+@login_required
+def handle_transfer(paste_id):
+    paste = Paste.query.get(paste_id)
+    if not paste:
+        return jsonify(success=False, error="paste not found!"), 404
+
+    current_user_obj = User.query.get(session["user_id"])
+
+    if paste.user_id != current_user_obj.id and not current_user_obj.is_admin:
+        return jsonify(success=False, error="yoou dont have the perms for this"), 403
+
+    new_owner_username = request.form.get("new_owner")
     new_owner = User.query.filter_by(username=new_owner_username).first()
-
     if not new_owner:
-        return jsonify({"success": False, "error": "User not found."}), 200
+        return jsonify(
+            success=False, error="new owner ...not found? check your spelling"
+        ), 400
+
+    if new_owner.id == current_user_obj.id:
+        return jsonify(
+            success=False,
+            error="no patrick, you cannot transfer the paste to yourself.",
+        ), 400
 
     paste.user_id = new_owner.id
     db.session.commit()
 
-    return jsonify({"success": True})
+    return jsonify(success=True)
 
 
 @app.route("/<paste_id>/delete", methods=["POST"])

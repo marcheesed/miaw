@@ -6,7 +6,6 @@
     </head>
     <body>
         <h1 style="text-align: center">all pastes</h1>
-        <!-- Search form -->
         <div class="container-1">
             <form
                 method="GET"
@@ -39,7 +38,12 @@
                 <tbody>
                     {% for paste in pastes %}
                     <tr>
-                        <td>{{ paste.id }}</td>
+                        <td>
+                            <a
+                                href="{{ url_for('view_paste', paste_id=paste.id) }}"
+                                >{{ paste.id }}</a
+                            >
+                        </td>
                         <td>
                             {{ paste.content[:50] }}{% if paste.content|length >
                             50 %}...{% endif %}
@@ -74,7 +78,6 @@
                 </tbody>
             </table>
         </div>
-        <!-- Pagination controls -->
         <div class="pagination">
             {% if page > 1 %}
             <a href="{{ url_for('pastes', page=page-1, search=search) }}"

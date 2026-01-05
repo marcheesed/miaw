@@ -1,11 +1,27 @@
 {% extends "layout.html" %} {% block content %}
 
 <head>
-    <title>{% block title %} {{ paste.id }} {% endblock %}</title>
+    {% if paste.meta_description %}
+    <meta name="description" content="{{ paste.meta_description }}" />
+    {% else %}
     <meta
         property="og:description"
         content="{{ paste.content|truncate(150) }}"
     />
+    {% endif %} {% if paste.favicon_url %}
+    <link
+        rel="icon"
+        href="{{ paste.favicon_url or url_for('static', filename='favicon.ico') }}"
+    />
+    {% endif %}
+    <meta property="og:image" content="{{ paste.meta_image }}" />
+    {% if paste.theme_color %}
+    <meta name="theme-color" content="{{ paste.theme_color }}" />
+    {% endif %}
+    <title>
+        {% block title %} {% if paste.page_title %} {{ paste.page_title }} {%
+        else %} {{ paste.id }} {% endif %} {% endblock %}
+    </title>
 </head>
 <div id="content">
     <div class="full-container-1">
@@ -14,10 +30,19 @@
         </div>
 
         <div style="display: flex; justify-content: space-between">
+            <div>
             <a href="#" onclick="editPaste(event, '{{ paste.id }}')"
                 ><button class="btn">edit</button></a
             >
-
+            {% if current_user.id == paste.user_id or current_user.id ==
+            is_admin %}
+            <a
+                href="{{ url_for('transfer_ownership', paste_id=paste.id) }}"
+                onclick="transferOwnership(event, '{{ paste.id }}')"
+                ><button class="btn">transfer</button></a
+            >
+            {% endif %}
+</div>
             <div class="paste-stats">
                 <p>
                     {% if published_at %} published on: {{
@@ -54,8 +79,8 @@
         padding: 20px;
     "
 >
-    <span id="popup-message"></span>
-    <br /><br />
+    <spanid="popup-message"></span>
+    <br /><br /><br />
     <button class="btn" onclick="hidePopup()">close</button>
 </div>
 
