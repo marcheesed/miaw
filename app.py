@@ -1261,5 +1261,21 @@ def inject_user():
     return dict(current_user=current_user)
 
 
+@app.template_filter("nice_date")
+def nice_date_filter(value):
+    from datetime import datetime
+
+    if isinstance(value, str):
+        try:
+            dt = datetime.fromisoformat(value)
+        except ValueError:
+            return value
+    elif isinstance(value, datetime):
+        dt = value
+    else:
+        return value
+    return dt.strftime("%B %d, %Y at %I:%M %p")
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

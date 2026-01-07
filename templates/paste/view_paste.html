@@ -50,19 +50,16 @@
             </div>
             <div class="paste-stats">
                 <p id="published-at">
-                    {% if published_at %} published on: {{
-                    published_at.strftime("%Y-%m-%d %H:%M") }} UTC {% else %}
-                    none tf {% endif %}
+                    {% if published_at %} published on: {{ published_at |
+                    nice_date }} UTC {% else %} none tf {% endif %}
                 </p>
                 {% if last_edited_at %}
                 <p id="last-edited">
-                    last edited: {{ last_edited_at.strftime("%Y-%m-%d %H:%M") }}
-                    UTC
+                    last edited: {{ last_edited_at | nice_date }} UTC
                 </p>
                 {% else %}
                 <p id="last-edited">
-                    last edited: {{ published_at.strftime("%Y-%m-%d %H:%M") }}
-                    UTC
+                    last edited: {{ published_at | nice_date }} UTC
                 </p>
                 {% endif %}
                 <p id="paste-owner">
