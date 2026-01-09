@@ -385,10 +385,10 @@ def register():
             ).first()
             if not invite:
                 error = "invalid or already used invite code!"
-                return render_template("register.html", error=error)
+                return render_template("user/register.html", error=error)
         else:
             error = "invite code is required!"
-            return render_template("register.html", error=error)
+            return render_template("user/register.html", error=error)
 
         if User.query.filter_by(username=username).first():
             error = "username already exists!!"
