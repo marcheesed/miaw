@@ -256,6 +256,10 @@ input {
     color: var(--color-icon) !important;
 }
 
+#dropdownContent a {
+    color: var(--color-icon) !important;
+}
+
 .dropdown-content.show {
     display: block;
 }
