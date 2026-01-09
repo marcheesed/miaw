@@ -888,13 +888,11 @@ def dashboard():
     if user is None:
         session.pop("user_id", None)
         return redirect(url_for("login"))
-
     search_query = request.args.get("search", "")
     page = int(request.args.get("page", 1))
     per_page = 10
-
     pastes_query = Paste.query.filter_by(user_id=user.id)
-
+    pastes_query = pastes_query.order_by(Paste.last_edited_at.desc())
     if search_query:
         pastes_query = pastes_query.filter(
             or_(
@@ -902,10 +900,8 @@ def dashboard():
                 Paste.content.contains(search_query),
             )
         )
-
     total = pastes_query.count()
     user_pastes = pastes_query.offset((page - 1) * per_page).limit(per_page).all()
-
     return render_template(
         "user/dashboard.html",
         pastes=user_pastes,
