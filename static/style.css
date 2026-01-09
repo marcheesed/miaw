@@ -401,11 +401,11 @@ h5 {
     #extras-button {
         margin-top: 5px;
     }
-}
 
-.paste-stats {
-    padding-left: 40px;
-    line-height: 1.3rem !important;
+    .paste-stats {
+        padding-left: 40px;
+        line-height: 1.3rem !important;
+    }
 }
 
 #flex-user-actions {
