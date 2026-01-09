@@ -43,7 +43,7 @@
             <div>no pastes yet!</div>
             {% endif %}
         </div>
-        <div>
+        <div class="pagination">
             {% if page > 1 %}
             <a href="{{ url_for('dashboard', page=page-1, search=search) }}"
                 >Previous</a
