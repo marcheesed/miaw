@@ -23,7 +23,8 @@ from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from PIL import Image
-from sqlalchemy import CheckConstraint, or_
+from sqlalchemy import CheckConstraint, event, or_
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import joinedload
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -44,6 +45,15 @@ csrf = CSRFProtect(app)
 app.config["UPLOAD_FOLDER"] = "static/profile_pics"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 db = SQLAlchemy(app)
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL;")
+    cursor.close()
+
+
 app.jinja_env.finalize = lambda x: x if x is not None else ""
 
 user_badges = db.Table(
