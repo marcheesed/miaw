@@ -890,7 +890,7 @@ def dashboard():
         return redirect(url_for("login"))
     search_query = request.args.get("search", "")
     page = int(request.args.get("page", 1))
-    per_page = 10
+    per_page = 5
     pastes_query = Paste.query.filter_by(user_id=user.id)
     pastes_query = pastes_query.order_by(Paste.last_edited_at.desc())
     if search_query:
