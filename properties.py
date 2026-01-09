@@ -69,6 +69,7 @@ allowed_tags = [
     "colgroup",
     "row",
     "rowgroup",
+    "center",
 ]
 
 allowed_attributes = {
@@ -107,6 +108,7 @@ allowed_attributes = {
     "display": ["style", "class", "id"],
     "text-align": ["style", "class", "id"],
     "body": ["style", "class", "id"],
+    "center": ["style", "class", "id"],
 }
 
 

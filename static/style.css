@@ -253,7 +253,7 @@ input {
     border-radius: 8px;
     min-width: 200px;
     z-index: 1;
-    color: var(--color-icon);
+    color: var(--color-icon) !important;
 }
 
 .dropdown-content.show {
