@@ -397,6 +397,15 @@ h5 {
         overflow-x: auto;
         overflow-y: auto;
     }
+
+    #extras-button {
+        margin-top: 5px;
+    }
+}
+
+.paste-stats {
+    padding-left: 40px;
+    line-height: 1.3rem !important;
 }
 
 #flex-user-actions {
