@@ -74,6 +74,11 @@ allowed_tags = [
 
 allowed_attributes = {
     "a": ["href", "title", "target", "style", "class", "id"],
+    "p": ["href", "title", "target", "style", "class", "id"],
+    "b": ["href", "title", "target", "style", "class", "id"],
+    "bold": ["href", "title", "target", "style", "class", "id"],
+    "i": ["href", "title", "target", "style", "class", "id"],
+    "italic": ["href", "title", "target", "style", "class", "id"],
     "img": ["src", "alt", "title", "style", "class", "id"],
     "div": ["style", "class", "id"],
     "span": ["style", "class", "id"],
