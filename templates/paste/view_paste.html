@@ -37,14 +37,12 @@
         <div style="display: flex; justify-content: space-between">
             <div>
                 <a href="#" onclick="editPaste(event, '{{ paste.id }}')"
-                    ><button class="btn">edit</button></a
+                    ><button id="edit-button" class="btn">edit</button></a
                 >
                 {% if current_user.id == paste.user_id or current_user.is_admin
                 %}
-                <a
-                    href="{{ url_for('paste_extras', paste_id=paste.id) }}"
-                    onclick="transferOwnership(event, '{{ paste.id }}')"
-                    ><button class="btn">extras</button></a
+                <a href="{{ url_for('paste_extras', paste_id=paste.id) }}"
+                    ><button id="extras-button" class="btn">extras</button></a
                 >
                 {% endif %}
             </div>
